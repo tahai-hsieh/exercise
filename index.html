@@ -14,6 +14,7 @@
             --card-bg: #ffffff;
             --text-color: #333333;
             --purple-color: #9b59b6;
+            --warning-color: #f1c40f;
         }
 
         * { box-sizing: border-box; }
@@ -79,19 +80,36 @@
 
         /* 訓練計時器控制面板 */
         .control-panel { background: var(--card-bg); padding: 20px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); text-align: center; margin-bottom: 25px; }
-        .btn-start { background-color: var(--primary-color); color: white; border: none; padding: 14px 0; font-size: 1.3rem; font-weight: bold; border-radius: 30px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 280px; }
+        
+        /* 按鈕群組佈局 */
+        .main-btn-row {
+            display: flex; gap: 10px; justify-content: center; width: 100%; margin-bottom: 12px;
+        }
+        .btn-start { background-color: var(--primary-color); color: white; border: none; padding: 14px 0; font-size: 1.2rem; font-weight: bold; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 48%; max-width: 140px; }
         .btn-start.stop-mode { background-color: var(--danger-color); }
-        .btn-skip { background-color: #7f8c8d; color: white; border: none; padding: 8px 20px; font-size: 0.9rem; border-radius: 15px; cursor: pointer; margin-top: 12px; display: none; width: 100%; max-width: 160px; }
-        .btn-counter { background-color: var(--purple-color); color: white; border: none; padding: 18px 20px; font-size: 1.25rem; font-weight: bold; border-radius: 12px; cursor: pointer; margin: 15px 0; display: none; width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        
+        /* 暫停按鈕樣式 */
+        .btn-pause { background-color: var(--warning-color); color: #333; border: none; padding: 14px 0; font-size: 1.2rem; font-weight: bold; border-radius: 30px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 48%; max-width: 140px; display: none; }
+        .btn-pause.resume-mode { background-color: #27ae60; color: white; }
+
+        /* 動作微調按鈕群組 */
+        .step-adjust-group {
+            display: none; gap: 12px; justify-content: center; margin-top: 5px; margin-bottom: 12px;
+        }
+        .btn-step-adjust {
+            background-color: #ffffff; color: #34495e; border: 2px solid #bdc3c7; padding: 6px 16px; font-size: 0.85rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.1s;
+        }
+        .btn-step-adjust:active { background-color: #f2f4f4; transform: scale(0.96); }
+
+        .btn-skip { background-color: #7f8c8d; color: white; border: none; padding: 8px 20px; font-size: 0.9rem; border-radius: 15px; cursor: pointer; margin-bottom: 12px; display: none; width: 100%; max-width: 160px; }
+        .btn-counter { background-color: var(--purple-color); color: white; border: none; padding: 18px 20px; font-size: 1.25rem; font-weight: bold; border-radius: 12px; cursor: pointer; margin: 10px 0; display: none; width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
 
         /* 音樂控制鍵群組 */
         .music-controls-group {
-            display: none; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap;
+            display: none; gap: 8px; justify-content: center; margin-top: 15px; padding-top: 12px; border-top: 1px dashed #e5e7eb; width: 100%;
         }
         .btn-music-action {
-            background-color: #f3f4f6; color: #4b5563; border: 1px solid #d1d5db;
-            padding: 6px 14px; font-size: 0.85rem; font-weight: bold; border-radius: 20px;
-            cursor: pointer; transition: all 0.2s;
+            background-color: #f3f4f6; color: #4b5563; border: 1px solid #d1d5db; padding: 6px 14px; font-size: 0.85rem; font-weight: bold; border-radius: 20px; cursor: pointer;
         }
         .btn-music-action:active { background-color: #e5e7eb; }
 
@@ -139,6 +157,7 @@
         <h1>🥇 謝佳杰的裁判養成之路</h1>
         <div id="daily-quote-text" class="daily-quote">載入今日激勵語錄中...</div>
 
+        <!-- 主頁：簽到與今日課表狀態 -->
         <div class="home-panel">
             <div class="welcome-title" id="welcome-date">今天是星期幾</div>
             <div id="today-badge" class="today-status-badge">載入中...</div>
@@ -166,26 +185,39 @@
             </div>
         </div>
 
+        <!-- 動態訓練計時控制台主區段 -->
         <div id="timer-container-section" style="display: none;">
             <div class="workout-section-title" id="panel-title-text">⏱ 訓練控制台</div>
             
             <div class="control-panel">
-                <button id="start-btn" class="btn-start" onclick="toggleWorkout()">開始練習 🚀</button>
+                <!-- 雙按鈕核心控制列（較建議此版本） -->
+                <div class="main-btn-row">
+                    <button id="start-btn" class="btn-start" onclick="toggleWorkout()">開始練習 🚀</button>
+                    <button id="pause-btn" class="btn-pause" onclick="togglePauseWorkout()">暫停訓練 ⏸️</button>
+                </div>
+
+                <!-- 動作調整微調鍵 -->
+                <div id="step-adjust-box" class="step-adjust-group">
+                    <button class="btn-step-adjust" onclick="navigateStep(-1)">⏮️ 上一個動作</button>
+                    <button class="btn-step-adjust" onclick="navigateStep(1)">下一個動作 ⏭️</button>
+                </div>
+
                 <center>
                     <button id="skip-btn" class="btn-skip" onclick="skipRest()">跳過休息 ⏩</button>
                     <button id="counter-btn" class="btn-counter" onclick="incrementLaps()">折返跑完成 (目前：0 / 6 趟) 🏃‍♂️</button>
-                    
-                    <div id="music-ctrl-box" class="music-controls-group">
-                        <button class="btn-music-action" onclick="seekMusicPlaylist(5)">+5s ⏩</button>
-                        <button id="play-pause-music-btn" class="btn-music-action" onclick="toggleMusicPlayback()">暫停音樂 ⏸️</button>
-                        <button class="btn-music-action" onclick="nextTrackPlaylist()">跳過此歌 ⏭️</button>
-                    </div>
                 </center>
                 
                 <div id="status-area" class="status-display">
                     <div id="round-text" class="current-round">第 1 組</div>
                     <div id="task-text" class="current-task">準備倒數</div>
                     <div id="countdown-text" class="timer-countdown">3</div>
+                </div>
+
+                <!-- 音樂操作獨立鍵群組 -->
+                <div id="music-ctrl-box" class="music-controls-group">
+                    <button class="btn-music-action" onclick="seekMusicPlaylist(5)">+5s ⏩</button>
+                    <button id="play-pause-music-btn" class="btn-music-action" onclick="toggleMusicPlayback()">暫停音樂 ⏸️</button>
+                    <button class="btn-music-action" onclick="nextTrackPlaylist()">跳過此歌 ⏭️</button>
                 </div>
             </div>
 
@@ -229,19 +261,10 @@
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         function onYouTubeIframeAPIReady() {
-            // 💡 修正亮點：將 playerVars 與 events 物件語法重新完美對齊，徹底阻斷致命卡死臭蟲（較建議此版本）
             ytPlayer = new YT.Player('yt-api-player', {
-                height: '100',
-                width: '100',
-                videoId: VIDEO_IDS[0],
-                playerVars: { 
-                    'playlist': VIDEO_IDS.join(','), 
-                    'loop': 1 
-                },
-                events: { 
-                    'onReady': onPlayerReady, 
-                    'onStateChange': onPlayerStateChange 
-                }
+                height: '100', width: '100', videoId: VIDEO_IDS[0],
+                playerVars: { 'playlist': VIDEO_IDS.join(','), 'loop': 1 },
+                events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange }
             });
         }
 
@@ -273,8 +296,8 @@
             function step(timestamp) {
                 const elapsed = timestamp - startTime;
                 const progress = Math.min(elapsed / durationMs, 1);
-                const currentVol = Math.round(startVolume + (volumeDiff * progress));
-                try { ytPlayer.setVolume(currentVol); } catch(e) {}
+                const startBtn = varBtn = Math.round(startVolume + (volumeDiff * progress));
+                try { ytPlayer.setVolume(startBtn); } catch(e) {}
                 if (progress < 1) window.requestAnimationFrame(step);
             }
             window.requestAnimationFrame(step);
@@ -402,15 +425,22 @@
         const weekNames = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
         let todayDay = new Date().getDay(); 
         let activeWorkout = null; 
+        
+        // 計時器核心狀態量
         let currentRound = 1;
         let currentStepIndex = 0;
         let countdownInterval;
         let isRunning = false;
+        let isPaused = false; // 🚨 追蹤是否處於暫停狀態
+        let timeLeft = 0;     // 儲存當前動作剩餘秒數
         let currentLaps = 0; 
+        let currentStepType = ""; // 紀錄當前動作是倒數、計次還是折返跑
 
         const startBtn = document.getElementById('start-btn');
+        const pauseBtn = document.getElementById('pause-btn');
         const skipBtn = document.getElementById('skip-btn');
         const counterBtn = document.getElementById('counter-btn');
+        const stepAdjustBox = document.getElementById('step-adjust-box');
         const musicCtrlBox = document.getElementById('music-ctrl-box');
         const statusArea = document.getElementById('status-area');
         const roundText = document.getElementById('round-text');
@@ -536,37 +566,124 @@
         function clickCheckIn() { localStorage.setItem('checkedInDate', new Date().toDateString()); alert("簽到成功！今天也要保持紀律，繼續加油！🔥"); renderSystemPage(); }
         function formatTimeDisplay(totalSeconds) { if (totalSeconds >= 60) { return `${Math.floor(totalSeconds / 60)}分${totalSeconds % 60}秒`; } return `${totalSeconds}s`; }
 
+        /* ==================== ⏱️ 計時訓練控制核心引擎 ==================== */
         function toggleWorkout() {
             if (!isRunning) {
-                isRunning = true; startBtn.textContent = "停止訓練 ⏹️"; startBtn.classList.add('stop-mode');
+                isRunning = true;
+                isPaused = false;
+                startBtn.textContent = "完全結束 ⏹️";
+                startBtn.classList.add('stop-mode');
+                
+                // 顯現暫停鈕與動作調整鈕
+                pauseBtn.style.display = 'inline-block';
+                pauseBtn.textContent = "暫停訓練 ⏸️";
+                pauseBtn.classList.remove('resume-mode');
+                stepAdjustBox.style.display = 'flex';
                 musicCtrlBox.style.display = 'flex';
-                playMusicPlaylist(); initWorkout();
-            } else { resetWorkout(); }
+                
+                playMusicPlaylist();
+                initWorkout();
+            } else {
+                resetWorkout();
+            }
         }
 
         function resetWorkout() {
-            clearInterval(countdownInterval); isRunning = false; currentRound = 1; currentStepIndex = 0; currentLaps = 0;
-            startBtn.textContent = "開始練習 🚀"; startBtn.classList.remove('stop-mode');
-            statusArea.style.display = 'none'; skipBtn.style.display = 'none'; counterBtn.style.display = 'none'; musicCtrlBox.style.display = 'none';
-            clearAllHighlights(); countdownText.onclick = null; countdownText.style.cursor = "default";
+            clearInterval(countdownInterval);
+            isRunning = false;
+            isPaused = false;
+            currentRound = 1;
+            currentStepIndex = 0;
+            currentLaps = 0;
+            
+            startBtn.textContent = "開始練習 🚀";
+            startBtn.classList.remove('stop-mode');
+            
+            // 隱藏輔助按鈕
+            pauseBtn.style.display = 'none';
+            stepAdjustBox.style.display = 'none';
+            musicCtrlBox.style.display = 'none';
+            statusArea.style.display = 'none';
+            skipBtn.style.display = 'none';
+            counterBtn.style.display = 'none';
+            
+            clearAllHighlights();
+            countdownText.onclick = null;
+            countdownText.style.cursor = "default";
             stopMusicPlaylist();
         }
 
+        // 🚨 全新智慧「暫停 / 恢復」控制函數（較建議此版本）
+        function togglePauseWorkout() {
+            if (!isRunning) return;
+
+            if (!isPaused) {
+                // 1. 進入暫停狀態：原地凍結時間、降音並暫停音樂
+                isPaused = true;
+                clearInterval(countdownInterval);
+                pauseBtn.textContent = "恢復訓練 ▶️";
+                pauseBtn.classList.add('resume-mode');
+                
+                if (isMusicPlaying) {
+                    fadeVideoVolume(0, 200);
+                    setTimeout(() => { ytPlayer.pauseVideo(); }, 200);
+                }
+                playSound(440, 0.08);
+                countdownText.style.opacity = "0.6"; // 視覺提示目前處於凍結狀態
+            } else {
+                // 2. 恢復播放狀態：重啟定時器、恢復音樂
+                isPaused = true; 
+                pauseBtn.textContent = "暫停訓練 ⏸️";
+                pauseBtn.classList.remove('resume-mode');
+                countdownText.style.opacity = "1";
+                
+                if (isMusicPlaying) ytPlayer.playVideo();
+
+                // 根據當前動作種類，精準還原原本被中斷的倒數定時器
+                if (currentStepType === "timer") {
+                    resumeTimerEngine();
+                } else {
+                    // 如果是計次或折返跑模式，不需背景倒數，只需重新打亮即可
+                    isPaused = false;
+                }
+                playSound(600, 0.05);
+            }
+        }
+
         function initWorkout() {
-            statusArea.style.display = 'block'; currentRound = 1; currentStepIndex = 0; currentLaps = 0; clearAllHighlights();
+            statusArea.style.display = 'block';
+            currentRound = 1;
+            currentStepIndex = 0;
+            currentLaps = 0;
+            clearAllHighlights();
+            
             if (isMusicPlaying) fadeVideoVolume(DUCKED_VOLUME, 150);
             runPreparation(3, () => { executeStep(); });
         }
 
         function runPreparation(seconds, callback) {
-            taskText.textContent = "準備倒數"; skipBtn.style.display = 'none'; counterBtn.style.display = 'none';
-            countdownText.style.color = "var(--accent-color)"; countdownText.textContent = seconds; playSound(440, 0.1);
+            currentStepType = "prep";
+            taskText.textContent = "準備倒數";
+            skipBtn.style.display = 'none';
+            counterBtn.style.display = 'none';
+            countdownText.style.color = "var(--accent-color)";
+            countdownText.textContent = seconds;
+            playSound(440, 0.1);
+
             let sec = seconds;
             countdownInterval = setInterval(() => {
+                if (isPaused) return; // 如果被按暫停，原地凍結
                 sec--;
-                if (sec > 0) { countdownText.textContent = sec; playSound(440, 0.1); }
-                else if (sec === 0) { countdownText.textContent = "開始！"; playSound(880, 0.3); }
-                else { clearInterval(countdownInterval); callback(); }
+                if (sec > 0) {
+                    countdownText.textContent = sec;
+                    playSound(440, 0.1);
+                } else if (sec === 0) {
+                    countdownText.textContent = "開始！";
+                    playSound(880, 0.3);
+                } else {
+                    clearInterval(countdownInterval);
+                    callback();
+                }
             }, 1000);
         }
 
@@ -575,62 +692,120 @@
             const step = activeWorkout.activeConfig[currentStepIndex];
             if (currentRound === activeWorkout.maxRounds && step.isFinalRest) { endWorkout(); return; }
 
+            isPaused = false; // 每次前進新動作自動校正暫停標記
             roundText.textContent = `第 ${currentRound} / ${activeWorkout.maxRounds} 組`;
-            taskText.textContent = step.name; highlightItem(step.id);
+            taskText.textContent = step.name;
+            highlightItem(step.id);
             skipBtn.style.display = (step.isRestStep) ? 'inline-block' : 'none';
             
             if (step.type === "lapCounter") {
-                counterBtn.style.display = 'inline-block'; currentLaps = 0;
+                currentStepType = "lapCounter";
+                counterBtn.style.display = 'inline-block';
+                currentLaps = 0;
                 counterBtn.textContent = `折返跑完成 (目前：${currentLaps} / 6 趟) 🏃‍♂️`;
-                countdownText.style.color = "var(--purple-color)"; countdownText.textContent = "RUN!";
+                countdownText.style.color = "var(--purple-color)";
+                countdownText.textContent = "RUN!";
                 if (isMusicPlaying) fadeVideoVolume(NORMAL_VOLUME, 300); 
                 return;
-            } else { counterBtn.style.display = 'none'; }
+            } else {
+                counterBtn.style.display = 'none';
+            }
 
             if (step.type === "timer") {
-                let timeLeft = step.duration;
-                if (timeLeft <= 5) { 
-                    if (isMusicPlaying) fadeVideoVolume(DUCKED_VOLUME, 150); 
-                    countdownText.style.color = "var(--danger-color)"; 
-                } else { 
-                    if (isMusicPlaying) fadeVideoVolume(NORMAL_VOLUME, 300); 
-                    countdownText.style.color = "var(--accent-color)"; 
+                currentStepType = "timer";
+                timeLeft = step.duration;
+                if (timeLeft <= 5) {
+                    if (isMusicPlaying) fadeVideoVolume(DUCKED_VOLUME, 150);
+                    countdownText.style.color = "var(--danger-color)";
+                } else {
+                    if (isMusicPlaying) fadeVideoVolume(NORMAL_VOLUME, 300);
+                    countdownText.style.color = "var(--accent-color)";
                 }
                 countdownText.textContent = formatTimeDisplay(timeLeft);
-                
-                countdownInterval = setInterval(() => {
-                    timeLeft--;
-                    if (timeLeft > 0) {
-                        countdownText.textContent = formatTimeDisplay(timeLeft);
-                        if (timeLeft <= 5) {
-                            countdownText.style.color = "var(--danger-color)";
-                            if (timeLeft === 5 && isMusicPlaying) fadeVideoVolume(DUCKED_VOLUME, 300);
-                            playSound(550, 0.1);
-                        }
-                    } else {
-                        clearInterval(countdownInterval); playSound(880, 0.4);
-                        countdownText.style.color = "var(--danger-color)";
-                        if (step.exerciseAfter) countdownText.textContent = "開始休息";
-                        else if (step.restAfter) countdownText.textContent = "開始訓練";
-                        else countdownText.textContent = "開始下一個動作";
-                        setTimeout(() => { nextStep(); }, 1000);
-                    }
-                }, 1000);
+                resumeTimerEngine(); // 啟動倒數計時核心
             } else if (step.type === "count") {
+                currentStepType = "count";
                 if (isMusicPlaying) fadeVideoVolume(NORMAL_VOLUME, 300);
-                countdownText.style.color = "var(--secondary-color)"; countdownText.textContent = "DONE ➔"; countdownText.style.cursor = "pointer";
+                countdownText.style.color = "var(--secondary-color)";
+                countdownText.textContent = "DONE ➔";
+                countdownText.style.cursor = "pointer";
                 countdownText.onclick = function() {
-                    countdownText.onclick = null; countdownText.style.cursor = "default"; countdownText.style.color = "var(--danger-color)";
+                    if (isPaused) return; // 暫停中點擊無效
+                    countdownText.onclick = null;
+                    countdownText.style.cursor = "default";
+                    countdownText.style.color = "var(--danger-color)";
                     if (isMusicPlaying) fadeVideoVolume(DUCKED_VOLUME, 150);
-                    if (activeWorkout.title.includes("體能爆汗")) countdownText.textContent = "開始下一個動作";
-                    else countdownText.textContent = "開始休息";
+                    
+                    if (activeWorkout.title.includes("體能爆汗")) {
+                        countdownText.textContent = "開始下一個動作";
+                    } else {
+                        countdownText.textContent = "開始休息";
+                    }
                     setTimeout(() => { nextStep(); }, 1000);
                 };
             }
         }
 
+        // 獨立拆分出的時間倒數引擎，支援暫停後原地滿血復活（較建議此版本）
+        function resumeTimerEngine() {
+            isPaused = false;
+            clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                if (isPaused) return; 
+                timeLeft--;
+                if (timeLeft > 0) {
+                    countdownText.textContent = formatTimeDisplay(timeLeft);
+                    if (timeLeft <= 5) {
+                        countdownText.style.color = "var(--danger-color)";
+                        if (timeLeft === 5 && isMusicPlaying) fadeVideoVolume(DUCKED_VOLUME, 300);
+                        playSound(550, 0.1);
+                    }
+                } else {
+                    clearInterval(countdownInterval);
+                    playSound(880, 0.4);
+                    countdownText.style.color = "var(--danger-color)";
+                    
+                    const step = activeWorkout.activeConfig[currentStepIndex];
+                    if (step.exerciseAfter) countdownText.textContent = "開始休息";
+                    else if (step.restAfter) countdownText.textContent = "開始訓練";
+                    else countdownText.textContent = "開始下一個動作";
+                    
+                    setTimeout(() => { nextStep(); }, 1000);
+                }
+            }, 1000);
+        }
+
+        // 🚨 全新追加功能：手動上一個/下一個動作強制微調切換（較建議此版本）
+        function navigateStep(direction) {
+            if (!isRunning) return;
+            clearInterval(countdownInterval); // 終斷原本的倒數
+            countdownText.onclick = null;
+            countdownText.style.cursor = "default";
+            countdownText.style.opacity = "1";
+
+            currentStepIndex += direction;
+
+            // 1. 如果邊界溢出往前，推回上一組的最後一個動作
+            if (currentStepIndex < 0) {
+                if (currentRound > 1) {
+                    currentRound--;
+                    currentStepIndex = activeWorkout.activeConfig.length - 1;
+                } else {
+                    currentStepIndex = 0; // 已經是最初起點
+                }
+            } 
+            // 2. 如果邊界溢出往後，推到下一組的第一個動作
+            else if (currentStepIndex >= activeWorkout.activeConfig.length) {
+                currentStepIndex = 0;
+                currentRound++;
+            }
+
+            playSound(523.25, 0.05); // 換動作輕微反饋音
+            executeStep(); // 原地滿血重新載入新關卡
+        }
+
         function incrementLaps() {
-            if (activeWorkout.activeConfig[currentStepIndex].type !== "lapCounter") return;
+            if (isPaused || activeWorkout.activeConfig[currentStepIndex].type !== "lapCounter") return;
             currentLaps++; playSound(587.33, 0.1);
             if (currentLaps >= 6) {
                 counterBtn.style.display = 'none'; playSound(880, 0.4);
@@ -641,6 +816,7 @@
         }
 
         function skipRest() {
+            if (isPaused) return;
             clearInterval(countdownInterval); skipBtn.style.display = 'none'; playSound(880, 0.4);
             if (isMusicPlaying) fadeVideoVolume(DUCKED_VOLUME, 150); 
             countdownText.style.color = "var(--danger-color)"; countdownText.textContent = "開始訓練";
@@ -652,8 +828,7 @@
             if (currentStepIndex >= activeWorkout.activeConfig.length) {
                 currentStepIndex = 0; currentRound++;
                 if (currentRound <= activeWorkout.maxRounds) {
-                    clearAllHighlights(); 
-                    if (isMusicPlaying) fadeVideoVolume(DUCKED_VOLUME, 150);
+                    clearAllHighlights(); fadeVideoVolume(DUCKED_VOLUME, 150);
                     runPreparation(3, () => { executeStep(); }); return;
                 }
             }
@@ -663,11 +838,20 @@
         function endWorkout() {
             clearInterval(countdownInterval); clearAllHighlights(); isRunning = false;
             startBtn.textContent = "再練一次 💪"; startBtn.classList.remove('stop-mode');
-            skipBtn.style.display = 'none'; counterBtn.style.display = 'none'; musicCtrlBox.style.display = 'none';
+            
+            // 完賽隱藏進階按鈕
+            pauseBtn.style.display = 'none';
+            stepAdjustBox.style.display = 'none';
+            skipBtn.style.display = 'none'; 
+            counterBtn.style.display = 'none'; 
+            musicCtrlBox.style.display = 'none';
+            
             roundText.textContent = `第 ${activeWorkout.maxRounds} / ${activeWorkout.maxRounds} 組`;
             taskText.textContent = "🎉 恭喜完成今日完整訓練！卓越紀律！";
             countdownText.style.color = "var(--primary-color)"; countdownText.textContent = "🏆";
+            countdownText.style.opacity = "1";
             stopMusicPlaylist(); 
+            
             setTimeout(() => playSound(523.25, 0.15), 0);
             setTimeout(() => playSound(659.25, 0.15), 150);
             setTimeout(() => playSound(783.99, 0.3), 300);
