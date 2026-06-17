@@ -66,10 +66,29 @@
             transform: translateY(-2px);
         }
 
-        .btn-start:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-            transform: none;
+        /* 停止訓練時的紅色按鈕樣式 */
+        .btn-start.stop-mode {
+            background-color: var(--danger-color);
+        }
+        .btn-start.stop-mode:hover {
+            background-color: #c0392b;
+        }
+
+        /* 跳過休息按鈕樣式 */
+        .btn-skip {
+            background-color: #7f8c8d;
+            color: white;
+            border: none;
+            padding: 6px 15px;
+            font-size: 0.9rem;
+            border-radius: 15px;
+            cursor: pointer;
+            margin-top: 10px;
+            display: none; /* 預設隱藏，只有休息時才顯示 */
+            transition: background 0.2s;
+        }
+        .btn-skip:hover {
+            background-color: #666;
         }
 
         /* 倒數計時大螢幕 */
@@ -116,7 +135,6 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
-        /* 正在執行的動作高亮顯示 */
         .workout-item.active {
             border-left-color: var(--accent-color) !important;
             background: #fff3cd !important;
@@ -159,7 +177,10 @@
         <h1>🏋️ 每日核心下肢循環訓練 (3組)</h1>
 
         <div class="control-panel">
-            <button id="start-btn" class="btn-start" onclick="initWorkout()">開始練習 🚀</button>
+            <button id="start-btn" class="btn-start" onclick="toggleWorkout()">開始練習 🚀</button>
+            <div>
+                <button id="skip-btn" class="btn-skip" onclick="skipRest()">跳過休息 ⏩</button>
+            </div>
             
             <div id="status-area" class="status-display">
                 <div id="round-text" class="current-round">第 1 / 3 組</div>
@@ -210,29 +231,64 @@
     <script>
         const config = [
             { id: 0, name: "1. 側棒式轉體 (每邊 12 下)", type: "count" },
-            { id: 1, name: "2. 休息", type: "timer", duration: 45, restAfter: true },
+            { id: 1, name: "2. 休息", type: "timer", duration: 45, restAfter: true, isRestStep: true },
             { id: 2, name: "3. 保加利亞分腿蹲 (每腿 10 下)", type: "count" },
-            { id: 3, name: "4. 休息", type: "timer", duration: 45, restAfter: true },
+            { id: 3, name: "4. 休息", type: "timer", duration: 45, restAfter: true, isRestStep: true },
             { id: 4, name: "5. 死蟲式 (左右輪流 20 下)", type: "count" },
-            { id: 5, name: "6. 休息", type: "timer", duration: 45, restAfter: true },
+            { id: 5, name: "6. 休息", type: "timer", duration: 45, restAfter: true, isRestStep: true },
             { id: 6, name: "7. 仰臥捲腹觸膝 (20 下)", type: "count" },
-            { id: 7, name: "8. 休息", type: "timer", duration: 45, restAfter: true },
+            { id: 7, name: "8. 休息", type: "timer", duration: 45, restAfter: true, isRestStep: true },
             { id: 8, name: "9. 波比跳", type: "timer", duration: 40, exerciseAfter: true },
-            { id: 9, name: "10. 休息", type: "timer", duration: 45, isFinalRest: true, restAfter: true }
+            { id: 9, name: "10. 休息", type: "timer", duration: 45, isFinalRest: true, restAfter: true, isRestStep: true }
         ];
 
         let currentRound = 1;
         let currentStepIndex = 0;
         let countdownInterval;
+        let isRunning = false; // 用來追蹤目前是否在訓練中
 
         const startBtn = document.getElementById('start-btn');
+        const skipBtn = document.getElementById('skip-btn');
         const statusArea = document.getElementById('status-area');
         const roundText = document.getElementById('round-text');
         const taskText = document.getElementById('task-text');
         const countdownText = document.getElementById('countdown-text');
 
+        // 主按鈕控制：切換開始與停止（較建議此版本）
+        function toggleWorkout() {
+            if (!isRunning) {
+                // 開始訓練
+                isRunning = true;
+                startBtn.textContent = "停止訓練 ⏹️";
+                startBtn.classList.add('stop-mode');
+                initWorkout();
+            } else {
+                // 停止訓練並重設
+                resetWorkout();
+            }
+        }
+
+        // 重置所有狀態回到初始值
+        function resetWorkout() {
+            clearInterval(countdownInterval);
+            isRunning = false;
+            currentRound = 1;
+            currentStepIndex = 0;
+            
+            // 恢復主按鈕樣式
+            startBtn.textContent = "開始練習 🚀";
+            startBtn.classList.remove('stop-mode');
+            
+            // 隱藏狀態區與跳過按鈕
+            statusArea.style.display = 'none';
+            skipBtn.style.display = 'none';
+            
+            clearAllHighlights();
+            countdownText.onclick = null;
+            countdownText.style.cursor = "default";
+        }
+
         function initWorkout() {
-            startBtn.disabled = true;
             statusArea.style.display = 'block';
             currentRound = 1;
             currentStepIndex = 0;
@@ -245,6 +301,7 @@
 
         function runPreparation(seconds, callback) {
             taskText.textContent = "準備倒數";
+            skipBtn.style.display = 'none'; // 預備時不顯示跳過
             countdownText.style.color = "var(--accent-color)";
             countdownText.textContent = seconds;
             playSound(440, 0.1);
@@ -283,6 +340,13 @@
             
             highlightItem(step.id, step.type);
 
+            // 判斷是否顯示「跳過休息」按鈕
+            if (step.isRestStep) {
+                skipBtn.style.display = 'inline-block';
+            } else {
+                skipBtn.style.display = 'none';
+            }
+
             if (step.type === "timer") {
                 let timeLeft = step.duration;
                 
@@ -298,11 +362,10 @@
                             playSound(550, 0.1);
                         }
                     } else {
-                        // 倒數到 0 的瞬間（較建議此版本）
                         clearInterval(countdownInterval);
                         playSound(880, 0.4);
                         
-                        // 直接將第 0 秒改成文字，字體顏色維持醒目的紅色
+                        skipBtn.style.display = 'none'; // 轉場時隱藏跳過按鈕
                         countdownText.style.color = "var(--danger-color)";
                         if (step.exerciseAfter) {
                             countdownText.textContent = "開始休息";
@@ -310,7 +373,6 @@
                             countdownText.textContent = "開始訓練";
                         }
                         
-                        // 停留 1 秒後再切換
                         setTimeout(() => {
                             nextStep();
                         }, 1000);
@@ -324,7 +386,6 @@
                     countdownText.onclick = null;
                     countdownText.style.cursor = "default";
                     
-                    // 次數做完點擊時，第 0 秒的位置直接顯示文字
                     countdownText.style.color = "var(--danger-color)";
                     countdownText.textContent = "開始休息";
                     setTimeout(() => {
@@ -332,6 +393,20 @@
                     }, 1000);
                 };
             }
+        }
+
+        // 跳過休息的專用函數
+        function skipRest() {
+            clearInterval(countdownInterval);
+            skipBtn.style.display = 'none';
+            playSound(880, 0.4);
+            
+            // 直接顯示開始訓練，1 秒後進入下一步
+            countdownText.style.color = "var(--danger-color)";
+            countdownText.textContent = "開始訓練";
+            setTimeout(() => {
+                nextStep();
+            }, 1000);
         }
 
         function nextStep() {
@@ -356,12 +431,17 @@
         function endWorkout() {
             clearInterval(countdownInterval);
             clearAllHighlights();
+            isRunning = false;
+            
+            // 恢復按鈕原本狀態
+            startBtn.textContent = "再練一次 💪";
+            startBtn.classList.remove('stop-mode');
+            skipBtn.style.display = 'none';
+
             roundText.textContent = "第 3 / 3 組";
             taskText.textContent = "🎉 恭喜完成 3 組完整訓練！";
             countdownText.style.color = "var(--primary-color)";
             countdownText.textContent = "🏆";
-            startBtn.disabled = false;
-            startBtn.textContent = "再練一次 💪";
             
             setTimeout(() => playSound(523.25, 0.15), 0);
             setTimeout(() => playSound(659.25, 0.15), 150);
