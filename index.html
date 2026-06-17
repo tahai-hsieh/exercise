@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>謝佳杰的自主訓練系統</title>
     <style>
         :root {
@@ -16,204 +16,113 @@
             --purple-color: #9b59b6;
         }
 
+        * { box-sizing: border-box; }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
-            line-height: 1.6;
+            line-height: 1.5;
             margin: 0;
-            padding: 20px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        .container {
-            max-width: 600px;
-            width: 100%;
-        }
-
-        h1 {
-            text-align: center;
-            color: #2c3e50;
-            margin-bottom: 20px;
-        }
+        .container { width: 100%; max-width: 700px; }
+        h1 { text-align: center; color: #2c3e50; margin-top: 10px; margin-bottom: 20px; font-size: 1.6rem; }
 
         /* 簽到主頁面板 */
         .home-panel {
-            background: var(--card-bg);
-            padding: 22px;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            margin-bottom: 25px;
-            border-top: 6px solid var(--secondary-color);
-            text-align: center;
+            background: var(--card-bg); padding: 16px; border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06); margin-bottom: 20px;
+            border-top: 6px solid var(--secondary-color); text-align: center;
         }
 
-        .welcome-title {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-top: 0;
-            margin-bottom: 8px;
-        }
-
-        .today-status-badge {
-            display: inline-block;
-            padding: 6px 16px;
-            border-radius: 20px;
-            color: white;
-            font-weight: bold;
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-        }
-
+        .welcome-title { font-size: 1.25rem; font-weight: bold; color: #2c3e50; margin-top: 0; margin-bottom: 8px; }
+        .today-status-badge { display: inline-block; padding: 6px 16px; border-radius: 20px; color: white; font-weight: bold; font-size: 1.05rem; margin-bottom: 15px; }
         .status-strength { background-color: var(--accent-color); }
         .status-cardio { background-color: var(--purple-color); }
         .status-rest { background-color: var(--primary-color); }
         .status-makeup { background-color: #f1c40f; color: #333; }
+        .today-desc { font-size: 0.95rem; color: #555; background: #f9f9f9; padding: 12px; border-radius: 8px; border-left: 4px solid #ddd; margin-bottom: 16px; text-align: left; }
 
-        .today-desc {
-            font-size: 1.05rem;
-            color: #555;
-            background: #f9f9f9;
-            padding: 12px;
-            border-radius: 8px;
-            border-left: 4px solid #ddd;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        /* 今日主訓練按鈕 */
         .btn-main-action {
-            background-color: #2c3e50;
-            color: white;
-            border: none;
-            padding: 14px 35px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            border-radius: 25px;
-            cursor: pointer;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-            transition: all 0.2s;
-            display: none;
-            width: 80%;
-        }
-        .btn-main-action:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            background-color: #2c3e50; color: white; border: none; padding: 12px 25px; font-size: 1.15rem; font-weight: bold; border-radius: 25px; cursor: pointer; margin-bottom: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: all 0.2s; display: none; width: 100%; max-width: 320px;
         }
 
-        .checkin-section {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #edf7ed;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            text-align: left;
-        }
-
-        .btn-checkin {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 8px 18px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-        }
+        .checkin-section { display: flex; align-items: center; justify-content: space-between; background: #edf7ed; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: left; }
+        .btn-checkin { background-color: var(--primary-color); color: white; border: none; padding: 10px 16px; font-size: 0.95rem; font-weight: bold; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
         .btn-checkin:disabled { background-color: #bbb; cursor: not-allowed; }
 
-        .missed-checkbox-area {
-            font-size: 0.95rem;
-            color: var(--text-color);
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 8px;
-            background: #fff0f0;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px dashed var(--danger-color);
-        }
-
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            text-align: left;
-        }
+        .missed-checkbox-area { font-size: 0.85rem; color: var(--text-color); display: flex; flex-direction: column; align-items: flex-start; gap: 10px; background: #fff0f0; padding: 12px; border-radius: 8px; border: 1px dashed var(--danger-color); }
+        .checkbox-item { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; text-align: left; width: 100%; }
+        .checkbox-item input { margin-top: 3px; flex-shrink: 0; }
 
         /* 訓練計時器控制面板 */
-        .control-panel {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            text-align: center;
-            margin-bottom: 25px;
-        }
+        .control-panel { background: var(--card-bg); padding: 20px 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); text-align: center; margin-bottom: 25px; }
+        .btn-start { background-color: var(--primary-color); color: white; border: none; padding: 14px 0; font-size: 1.3rem; font-weight: bold; border-radius: 30px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 280px; }
+        .btn-start.stop-mode { background-color: var(--danger-color); }
+        .btn-skip { background-color: #7f8c8d; color: white; border: none; padding: 8px 20px; font-size: 0.9rem; border-radius: 15px; cursor: pointer; margin-top: 12px; display: none; width: 100%; max-width: 160px; }
+        .btn-counter { background-color: var(--purple-color); color: white; border: none; padding: 18px 20px; font-size: 1.25rem; font-weight: bold; border-radius: 12px; cursor: pointer; margin: 15px 0; display: none; width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
 
-        .btn-start {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.4rem;
+        /* 🎵 音樂切歌控制鍵群組樣式 */
+        .music-controls-group {
+            display: none; /* 預設隱藏，開練才顯現 */
+            gap: 10px;
+            justify-content: center;
+            margin-top: 12px;
+        }
+        .btn-music-action {
+            background-color: #f3f4f6;
+            color: #4b5563;
+            border: 1px solid #d1d5db;
+            padding: 6px 14px;
+            font-size: 0.85rem;
             font-weight: bold;
-            border-radius: 30px;
+            border-radius: 20px;
             cursor: pointer;
             transition: all 0.2s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        .btn-start:hover { background-color: #439a46; transform: translateY(-2px); }
-        .btn-start.stop-mode { background-color: var(--danger-color); }
-        .btn-start.stop-mode:hover { background-color: #c0392b; }
+        .btn-music-action:active { background-color: #e5e7eb; }
 
-        .btn-skip {
-            background-color: #7f8c8d; color: white; border: none;
-            padding: 6px 15px; font-size: 0.9rem; border-radius: 15px;
-            cursor: pointer; margin-top: 10px; display: none;
-            transition: background 0.2s;
-        }
-
-        /* 折返跑專用大計數按鈕 */
-        .btn-counter {
-            background-color: var(--purple-color);
-            color: white;
-            border: none;
-            padding: 15px 25px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            border-radius: 10px;
-            cursor: pointer;
-            margin: 15px 0;
-            display: none;
-            width: 100%;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .btn-counter:active { transform: scale(0.98); }
-
-        .status-display { margin-top: 15px; display: none; }
-        .current-round { font-size: 1.2rem; color: #7f8c8d; font-weight: bold; }
-        .current-task { font-size: 1.8rem; color: #2c3e50; font-weight: bold; margin: 10px 0; }
-        .timer-countdown { font-size: 4rem; font-weight: bold; color: var(--accent-color); margin: 10px 0; transition: color 0.2s ease; }
+        .status-display { margin-top: 15px; }
+        .current-round { font-size: 1.1rem; color: #7f8c8d; font-weight: bold; }
+        .current-task { font-size: 1.5rem; color: #2c3e50; font-weight: bold; margin: 8px 0; padding: 0 5px; }
+        .timer-countdown { font-size: 3.5rem; font-weight: bold; color: var(--accent-color); margin: 5px 0; transition: color 0.2s ease; word-break: break-all; }
 
         /* 課表清單樣式 */
-        .workout-section-title { font-size: 1.3rem; font-weight: bold; color: #2c3e50; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; width: 100%; }
+        .workout-section-title { font-size: 1.2rem; font-weight: bold; color: #2c3e50; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; width: 100%; }
         .workout-list { list-style: none; padding: 0; margin: 0; opacity: 0.8; width: 100%; }
-        .workout-item { background: var(--card-bg); border-left: 5px solid #bdc3c7; margin-bottom: 12px; padding: 15px 20px; border-radius: 0 8px 8px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: left; }
-        .workout-item.active { border-left-color: var(--accent-color) !important; background: #fff3cd !important; transform: scale(1.02); box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: all 0.3s; }
+        .workout-item { background: var(--card-bg); border-left: 5px solid #bdc3c7; margin-bottom: 12px; padding: 15px; border-radius: 0 8px 8px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.04); text-align: left; }
+        .workout-item.active { border-left-color: var(--accent-color) !important; background: #fff3cd !important; transform: scale(1.01); box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
         .workout-item.active-rest { border-left-color: var(--secondary-color) !important; background: #eef7ff !important; }
-        .workout-title { font-size: 1.2rem; font-weight: bold; margin: 0 0 5px 0; display: flex; justify-content: space-between; }
-        .workout-count { color: #e67e22; }
+        .workout-title { font-size: 1.1rem; font-weight: bold; margin: 0 0 5px 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .workout-count { color: #e67e22; flex-shrink: 0; font-size: 1rem; }
         .rest-item .workout-count { color: var(--secondary-color); }
-        .workout-desc { font-size: 0.9rem; color: #7f8c8d; margin: 5px 0 0 0; }
+        .workout-desc { font-size: 0.85rem; color: #7f8c8d; margin: 5px 0 0 0; }
+
+        /* 隱藏 YouTube 播放器 */
+        #yt-player-container {
+            position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;
+        }
+
+        @media (min-width: 600px) {
+            body { padding: 24px; }
+            h1 { font-size: 2rem; margin-bottom: 25px; }
+            .home-panel { padding: 28px; }
+            .welcome-title { font-size: 1.5rem; }
+            .today-desc { font-size: 1.05rem; padding: 15px; }
+            .missed-checkbox-area { font-size: 0.95rem; padding: 16px; }
+            .timer-countdown { font-size: 5rem; margin: 10px 0; }
+            .current-task { font-size: 1.8rem; }
+            .workout-title { font-size: 1.2rem; }
+            .workout-count { font-size: 1.1rem; }
+            .workout-desc { font-size: 0.9rem; }
+            .workout-item { padding: 18px 20px; }
+        }
     </style>
 </head>
 <body>
@@ -227,25 +136,24 @@
             <div id="today-badge" class="today-status-badge">載入中...</div>
             <div id="today-desc" class="today-desc">課表內容加載中...</div>
 
-            <!-- 智慧引導進入訓練按鈕 -->
-            <button id="main-action-btn" class="btn-main-action" onclick="scrollToWorkoutPanel()">進入今日訓練菜單 ➔</button>
+            <center>
+                <button id="main-action-btn" class="btn-main-action" onclick="scrollToWorkoutPanel()">進入今日訓練菜單 ➔</button>
+            </center>
 
-            <!-- 簽到功能區 -->
             <div class="checkin-section">
-                <div><span id="checkin-status-text">今日尚未簽到 📝</span></div>
+                <div><span id="checkin-status-text" style="font-size:0.95rem; font-weight:bold;">今日尚未簽到 📝</span></div>
                 <button id="checkin-btn" class="btn-checkin" onclick="clickCheckIn()">每日簽到</button>
             </div>
 
-            <!-- 雙測試勾選區（勾選立刻即時覆蓋控制台，較建議此版本） -->
             <div class="missed-checkbox-area">
-                <span style="font-weight: bold; color: var(--danger-color); margin-bottom: 4px;">🛠 模擬補簽測試面板 (勾選立刻覆蓋，取消即還原)：</span>
+                <span style="font-weight: bold; color: var(--danger-color); margin-bottom: 2px;">🛠 模擬補簽測試面板 (勾選立刻覆蓋，取消即還原)：</span>
                 <label class="checkbox-item">
                     <input type="checkbox" id="mock-strength-cb" onchange="selectMockMode('strength')">
-                    勾選模擬「之前有漏掉簽到」（測試核心肌力日補訓用）
+                    <span>勾選模擬「之前有漏掉簽到」<br><small style="color:#666;">（測試核心肌力日補訓用）</small></span>
                 </label>
                 <label class="checkbox-item">
                     <input type="checkbox" id="mock-cardio-cb" onchange="selectMockMode('cardio')">
-                    勾選模擬「之前有漏掉簽到」（測試體能爆汗日補訓用）
+                    <span>勾選模擬「之前有漏掉簽到」<br><small style="color:#666;">（測試體能爆汗日補訓用）</small></span>
                 </label>
             </div>
         </div>
@@ -256,10 +164,16 @@
             
             <div class="control-panel">
                 <button id="start-btn" class="btn-start" onclick="toggleWorkout()">開始練習 🚀</button>
-                <div>
+                <center>
                     <button id="skip-btn" class="btn-skip" onclick="skipRest()">跳過休息 ⏩</button>
-                    <button id="counter-btn" class="btn-counter" onclick="incrementLaps()">折返跑完成 (目前：0 / 6 趟) 運行中... 🏃‍♂️</button>
-                </div>
+                    <button id="counter-btn" class="btn-counter" onclick="incrementLaps()">折返跑完成 (目前：0 / 6 趟) 🏃‍♂️</button>
+                    
+                    <!-- 🚨 全新音樂操作按鈕群組（較建議此版本） -->
+                    <div id="music-ctrl-box" class="music-controls-group">
+                        <button class="btn-music-action" onclick="seekMusicPlaylist(5)">+5s ⏩</button>
+                        <button class="btn-music-action" onclick="nextTrackPlaylist()">跳過此歌 ⏭️</button>
+                    </div>
+                </center>
                 
                 <div id="status-area" class="status-display">
                     <div id="round-text" class="current-round">第 1 組</div>
@@ -268,14 +182,153 @@
                 </div>
             </div>
 
-            <!-- 課表顯示區 -->
             <div class="workout-section-title">📋 當前循環動作清單</div>
             <ul class="workout-list" id="workout-container-list"></ul>
         </div>
     </div>
 
+    <!-- 隱藏的 YouTube 播放載體 -->
+    <div id="yt-player-container"><div id="yt-api-player"></div></div>
+
     <script>
-        // 菜單 A：核心肌力日課表設定
+        // 🎵 播放清單 ID 設定
+        const PLAYLIST_ID = "PL3oW2tjiIxvS1Bf_U9_4R0rI-gYyB0Hl7"; 
+
+        let ytPlayer = null;
+        let isPlayerReady = false;
+        let saveMusicInterval = null; 
+
+        const NORMAL_VOLUME = 50; 
+        const DUCKED_VOLUME = 15; 
+
+        // 載入 YouTube IFrame API
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        function onYouTubeIframeAPIReady() {
+            ytPlayer = new YT.Player('yt-api-player', {
+                height: '100',
+                width: '100',
+                playerVars: {
+                    'listType': 'playlist',
+                    'list': PLAYLIST_ID,
+                    'loop': 1
+                },
+                events: {
+                    'onReady': onPlayerReady
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            isPlayerReady = true;
+            ytPlayer.setVolume(NORMAL_VOLUME);
+            
+            const savedTrackIndex = localStorage.getItem('yt_last_track_index');
+            if (savedTrackIndex === null) {
+                ytPlayer.setShuffle(true);
+            }
+        }
+
+        function fadeVideoVolume(targetVolume, durationMs) {
+            if (!isPlayerReady || !ytPlayer || typeof ytPlayer.getVolume !== 'function') return;
+            
+            const startVolume = ytPlayer.getVolume();
+            const volumeDiff = targetVolume - startVolume;
+            if (volumeDiff === 0) return;
+
+            const startTime = performance.now();
+
+            function step(timestamp) {
+                const elapsed = timestamp - startTime;
+                const progress = Math.min(elapsed / durationMs, 1);
+                const currentVol = Math.round(startVolume + (volumeDiff * progress));
+                
+                try {
+                    ytPlayer.setVolume(currentVol);
+                } catch(e) {}
+
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            }
+            window.requestAnimationFrame(step);
+        }
+
+        function playMusicPlaylist() {
+            if (isPlayerReady && ytPlayer) {
+                try {
+                    const savedTrackIndex = localStorage.getItem('yt_last_track_index');
+                    const savedPosition = localStorage.getItem('yt_last_position');
+
+                    if (savedTrackIndex !== null && savedPosition !== null) {
+                        ytPlayer.playVideoAt(parseInt(savedTrackIndex));
+                        setTimeout(() => {
+                            ytPlayer.seekTo(parseFloat(savedPosition), true);
+                            fadeVideoVolume(NORMAL_VOLUME, 200); 
+                        }, 600);
+                    } else {
+                        ytPlayer.playVideo();
+                        fadeVideoVolume(NORMAL_VOLUME, 200);
+                    }
+
+                    clearInterval(saveMusicInterval);
+                    saveMusicInterval = setInterval(() => {
+                        if (ytPlayer && typeof ytPlayer.getPlaylistIndex === 'function') {
+                            const currentIndex = ytPlayer.getPlaylistIndex();
+                            const currentPos = ytPlayer.getCurrentTime();
+                            
+                            if (ytPlayer.getPlayerState() === 1 && currentIndex !== -1) {
+                                localStorage.setItem('yt_last_track_index', currentIndex.toString());
+                                localStorage.setItem('yt_last_position', currentPos.toString());
+                            }
+                        }
+                    }, 2000);
+
+                } catch (e) { console.log("音樂接續播放失敗：", e); }
+            }
+        }
+
+        function stopMusicPlaylist() {
+            clearInterval(saveMusicInterval); 
+            if (isPlayerReady && ytPlayer) {
+                try {
+                    if (typeof ytPlayer.getPlaylistIndex === 'function' && ytPlayer.getPlaylistIndex() !== -1) {
+                        localStorage.setItem('yt_last_track_index', ytPlayer.getPlaylistIndex().toString());
+                        localStorage.setItem('yt_last_position', ytPlayer.getCurrentTime().toString());
+                    }
+                    ytPlayer.pauseVideo();
+                } catch (e) { console.log("音樂暫停失敗：", e); }
+            }
+        }
+
+        // 🚨 全新追加功能：快進指定秒數控制（較建議此版本）
+        function seekMusicPlaylist(seconds) {
+            if (isPlayerReady && ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
+                try {
+                    const currentTime = ytPlayer.getCurrentTime();
+                    ytPlayer.seekTo(currentTime + seconds, true);
+                    playSound(600, 0.05); // 點擊回饋短嗶聲
+                } catch(e) {}
+            }
+        }
+
+        // 🚨 全新追加功能：切換至下一首曲目（較建議此版本）
+        function nextTrackPlaylist() {
+            if (isPlayerReady && ytPlayer && typeof ytPlayer.nextVideo === 'function') {
+                try {
+                    ytPlayer.nextVideo();
+                    playSound(700, 0.08); 
+                    
+                    // 切換後立刻把歷史秒數洗成 0 秒，避免舊紀錄干擾新歌
+                    localStorage.setItem('yt_last_position', '0');
+                } catch(e) {}
+            }
+        }
+
+        // 課表清單配置
         const strengthConfig = [
             { id: 0, name: "1. 側棒式轉體 (每邊 12 下)", type: "count" },
             { id: 1, name: "2. 休息", type: "timer", duration: 45, restAfter: true, isRestStep: true },
@@ -289,7 +342,6 @@
             { id: 9, name: "10. 休息", type: "timer", duration: 45, isFinalRest: true, restAfter: true, isRestStep: true }
         ];
 
-        // 菜單 B：體能爆汗日課表設定
         const cardioConfig = [
             { id: 0, name: "1. 動態暖身", type: "timer", duration: 300, exerciseAfter: true }, 
             { id: 1, name: "2. 20公尺連續折返跑 (共 6 趟)", type: "lapCounter" },
@@ -298,7 +350,6 @@
             { id: 4, name: "5. 組間大休息", type: "timer", duration: 180, isFinalRest: true, restAfter: true, isRestStep: true } 
         ];
 
-        // 原始週課表架構
         const originalSchedule = {
             1: { type: "strength", name: "核心肌力日 🔥", desc: "🎯 課表：練核心、雕刻腹肌、練單腳力量。", hasTimer: true, maxRounds: 3, activeConfig: strengthConfig, title: "⏱ 核心下肢循環訓練控制台" },
             2: { type: "rest", name: "完全休息日 💤", desc: "🛌 課表：完全休息。修復是為了走更長遠的路！", hasTimer: false },
@@ -322,6 +373,7 @@
         const startBtn = document.getElementById('start-btn');
         const skipBtn = document.getElementById('skip-btn');
         const counterBtn = document.getElementById('counter-btn');
+        const musicCtrlBox = document.getElementById('music-ctrl-box');
         const statusArea = document.getElementById('status-area');
         const roundText = document.getElementById('round-text');
         const taskText = document.getElementById('task-text');
@@ -334,7 +386,6 @@
             renderSystemPage();
         };
 
-        // 即時監聽勾選狀態變更（較建議此版本）
         function selectMockMode(mode) {
             const strengthCB = document.getElementById('mock-strength-cb');
             const cardioCB = document.getElementById('mock-cardio-cb');
@@ -349,7 +400,6 @@
                 localStorage.removeItem('mockMode');
             }
             
-            // 如果當前正在倒數，切換測試勾選時立刻強制終斷重設，保護資料不混亂
             if (isRunning) resetWorkout();
             renderSystemPage();
         }
@@ -361,10 +411,8 @@
             const isCheckedInToday = (localStorage.getItem('checkedInDate') === todayStr);
             const mockMode = localStorage.getItem('mockMode');
 
-            // 預設抓取今天正常的週課表
             activeWorkout = { ...originalSchedule[todayDay] };
 
-            // 🚨 核心邏輯重整：只要勾選，不管今天是什麼日，立刻「原地」載入對應課表供點擊按鈕測試！
             if (mockMode === 'strength') {
                 document.getElementById('mock-strength-cb').checked = true;
                 document.getElementById('mock-cardio-cb').checked = false;
@@ -388,7 +436,6 @@
                 activeWorkout.activeConfig = cardioConfig;
                 activeWorkout.title = "⏱ 體能爆汗折返跑訓練控制台";
             } else {
-                // 清除勾選一律無縫走回正常主程式
                 document.getElementById('mock-strength-cb').checked = false;
                 document.getElementById('mock-cardio-cb').checked = false;
             }
@@ -412,7 +459,6 @@
                 checkinText.style.color = "var(--danger-color)";
             }
 
-            // 控制計時器大面板的顯示/隱藏
             if (activeWorkout.hasTimer) {
                 mainActionBtn.style.display = 'inline-block';
                 timerSection.style.display = 'block';
@@ -479,12 +525,26 @@
             renderSystemPage();
         }
 
+        function formatTimeDisplay(totalSeconds) {
+            if (totalSeconds >= 60) {
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                return `${minutes}分${seconds}秒`;
+            }
+            return `${totalSeconds}s`;
+        }
+
         /* ==================== 計時訓練核心引擎 ==================== */
         function toggleWorkout() {
             if (!isRunning) {
                 isRunning = true;
                 startBtn.textContent = "停止訓練 ⏹️";
                 startBtn.classList.add('stop-mode');
+                
+                // 展現切歌控制面板（較建議此版本）
+                musicCtrlBox.style.display = 'flex';
+                
+                playMusicPlaylist();
                 initWorkout();
             } else {
                 resetWorkout();
@@ -502,9 +562,15 @@
             statusArea.style.display = 'none';
             skipBtn.style.display = 'none';
             counterBtn.style.display = 'none';
+            
+            // 隱藏音樂切歌操作按鈕
+            musicCtrlBox.style.display = 'none';
+            
             clearAllHighlights();
             countdownText.onclick = null;
             countdownText.style.cursor = "default";
+            
+            stopMusicPlaylist();
         }
 
         function initWorkout() {
@@ -513,6 +579,8 @@
             currentStepIndex = 0;
             currentLaps = 0;
             clearAllHighlights();
+            
+            fadeVideoVolume(DUCKED_VOLUME, 150);
             runPreparation(3, () => {
                 executeStep();
             });
@@ -564,9 +632,11 @@
             if (step.type === "lapCounter") {
                 counterBtn.style.display = 'inline-block';
                 currentLaps = 0;
-                counterBtn.textContent = `折返完成 (目前：${currentLaps} / 6 趟) 🏃‍♂️`;
+                counterBtn.textContent = `折返跑完成 (目前：${currentLaps} / 6 趟) 🏃‍♂️`;
                 countdownText.style.color = "var(--purple-color)";
                 countdownText.textContent = "RUN!";
+                
+                fadeVideoVolume(NORMAL_VOLUME, 300);
                 return;
             } else {
                 counterBtn.style.display = 'none';
@@ -574,15 +644,27 @@
 
             if (step.type === "timer") {
                 let timeLeft = step.duration;
-                countdownText.style.color = (timeLeft <= 5) ? "var(--danger-color)" : "var(--accent-color)";
-                countdownText.textContent = `${timeLeft}s`;
+                
+                if (timeLeft <= 5) {
+                    fadeVideoVolume(DUCKED_VOLUME, 150);
+                    countdownText.style.color = "var(--danger-color)";
+                } else {
+                    fadeVideoVolume(NORMAL_VOLUME, 300);
+                    countdownText.style.color = "var(--accent-color)";
+                }
+
+                countdownText.textContent = formatTimeDisplay(timeLeft);
                 
                 countdownInterval = setInterval(() => {
                     timeLeft--;
                     if (timeLeft > 0) {
-                        countdownText.textContent = `${timeLeft}s`;
+                        countdownText.textContent = formatTimeDisplay(timeLeft);
+                        
                         if (timeLeft <= 5) {
                             countdownText.style.color = "var(--danger-color)";
+                            if (timeLeft === 5) {
+                                fadeVideoVolume(DUCKED_VOLUME, 300); 
+                            }
                             playSound(550, 0.1);
                         }
                     } else {
@@ -602,6 +684,8 @@
                     }
                 }, 1000);
             } else if (step.type === "count") {
+                fadeVideoVolume(NORMAL_VOLUME, 300);
+                
                 countdownText.style.color = "var(--secondary-color)";
                 countdownText.textContent = "DONE ➔";
                 countdownText.style.cursor = "pointer";
@@ -609,6 +693,8 @@
                     countdownText.onclick = null;
                     countdownText.style.cursor = "default";
                     countdownText.style.color = "var(--danger-color)";
+                    
+                    fadeVideoVolume(DUCKED_VOLUME, 150);
                     
                     if (activeWorkout.title.includes("體能爆汗")) {
                         countdownText.textContent = "開始下一個動作";
@@ -629,8 +715,11 @@
             if (currentLaps >= 6) {
                 counterBtn.style.display = 'none';
                 playSound(880, 0.4);
+                
+                fadeVideoVolume(DUCKED_VOLUME, 150);
                 countdownText.style.color = "var(--danger-color)";
                 countdownText.textContent = "開始下一個動作";
+                
                 setTimeout(() => { nextStep(); }, 1000);
             } else {
                 counterBtn.textContent = `折返完成 (目前：${currentLaps} / 6 趟) 🏃‍♂️`;
@@ -641,6 +730,8 @@
             clearInterval(countdownInterval);
             skipBtn.style.display = 'none';
             playSound(880, 0.4);
+            
+            fadeVideoVolume(DUCKED_VOLUME, 150);
             countdownText.style.color = "var(--danger-color)";
             countdownText.textContent = "開始訓練";
             setTimeout(() => { nextStep(); }, 1000);
@@ -655,6 +746,7 @@
                 currentRound++;
                 if (currentRound <= activeWorkout.maxRounds) {
                     clearAllHighlights();
+                    fadeVideoVolume(DUCKED_VOLUME, 150);
                     runPreparation(3, () => { executeStep(); });
                     return;
                 }
@@ -671,11 +763,14 @@
             startBtn.classList.remove('stop-mode');
             skipBtn.style.display = 'none';
             counterBtn.style.display = 'none';
+            musicCtrlBox.style.display = 'none'; // 隱藏音樂切歌操作按鈕
 
             roundText.textContent = `第 ${activeWorkout.maxRounds} / ${activeWorkout.maxRounds} 組`;
             taskText.textContent = "🎉 恭喜完成今日完整訓練！卓越紀律！";
             countdownText.style.color = "var(--primary-color)";
             countdownText.textContent = "🏆";
+            
+            stopMusicPlaylist(); 
             
             setTimeout(() => playSound(523.25, 0.15), 0);
             setTimeout(() => playSound(659.25, 0.15), 150);
