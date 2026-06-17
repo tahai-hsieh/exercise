@@ -137,7 +137,8 @@
 
     <div class="container">
         <h1>🥇 謝佳杰的裁判養成之路</h1>
-        <div id="daily-quote-text" class="daily-quote">“ 吹哨要果斷，核心要強悍。新的一週，從建立絕對的場上威嚴開始！ 💪 ”</div>
+        <!-- 💡 修正亮點：將這裡原本寫死的文字清除，改成純淨載入容器，交給 JS 依照當天日期精準灌入 -->
+        <div id="daily-quote-text" class="daily-quote">載入今日激勵語錄中...</div>
 
         <!-- 主頁：簽到與今日課表狀態 -->
         <div class="home-panel">
@@ -180,7 +181,6 @@
                     <!-- 音樂操作按鈕群組 -->
                     <div id="music-ctrl-box" class="music-controls-group">
                         <button class="btn-music-action" onclick="seekMusicPlaylist(5)">+5s ⏩</button>
-                        <!-- 🚨 全新暫停/播放按鈕 -->
                         <button id="play-pause-music-btn" class="btn-music-action" onclick="toggleMusicPlayback()">暫停音樂 ⏸️</button>
                         <button class="btn-music-action" onclick="nextTrackPlaylist()">跳過此歌 ⏭️</button>
                     </div>
@@ -222,7 +222,7 @@
         let ytPlayer = null;
         let isPlayerReady = false;
         let saveMusicInterval = null; 
-        let isMusicPlaying = false; // 追蹤音樂當前是否處於播放狀態
+        let isMusicPlaying = false; 
 
         const NORMAL_VOLUME = 50; 
         const DUCKED_VOLUME = 15; 
@@ -324,22 +324,15 @@
             }
         }
 
-        // 🚨 全新智慧雙向暫停/恢復控制函數（較建議此版本）
         function toggleMusicPlayback() {
             if (!isPlayerReady || !ytPlayer) return;
-            
-            const btn = document.getElementById('play-pause-music-btn');
             if (isMusicPlaying) {
-                // 如果目前在播，平滑降音並暫停
                 fadeVideoVolume(0, 200);
-                setTimeout(() => {
-                    stopMusicPlaylist(); // 內部會精準記帳並切換 isMusicPlaying 狀態
-                }, 200);
+                setTimeout(() => { stopMusicPlaylist(); }, 200);
             } else {
-                // 如果目前暫停，啟動續播程式
                 playMusicPlaylist();
             }
-            playSound(600, 0.05); // 按鈕觸覺反饋
+            playSound(600, 0.05); 
         }
 
         function seekMusicPlaylist(seconds) {
@@ -418,6 +411,7 @@
         }
 
         function renderSystemPage() {
+            // 🚨 修正核心（較建議此版本）：每次重新渲染時，一律由當前的 todayDay 變數動態從字典庫抓取，絕不放殘留死文字
             document.getElementById('daily-quote-text').textContent = dailyQuotes[todayDay];
             document.getElementById('welcome-date').textContent = `今天是 ${weekNames[todayDay]}`;
             
@@ -531,10 +525,7 @@
 
         function initWorkout() {
             statusArea.style.display = 'block'; currentRound = 1; currentStepIndex = 0; currentLaps = 0; clearAllHighlights();
-            
-            // 如果暫停按鈕之前被使用者按過導致音樂沒播，開局依然會強制降音解鎖
             if (isMusicPlaying) fadeVideoVolume(DUCKED_VOLUME, 150);
-            
             runPreparation(3, () => { executeStep(); });
         }
 
