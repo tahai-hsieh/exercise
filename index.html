@@ -137,10 +137,8 @@
 
     <div class="container">
         <h1>🥇 謝佳杰的裁判養成之路</h1>
-        <!-- 💡 修正亮點：將這裡原本寫死的文字清除，改成純淨載入容器，交給 JS 依照當天日期精準灌入 -->
         <div id="daily-quote-text" class="daily-quote">載入今日激勵語錄中...</div>
 
-        <!-- 主頁：簽到與今日課表狀態 -->
         <div class="home-panel">
             <div class="welcome-title" id="welcome-date">今天是星期幾</div>
             <div id="today-badge" class="today-status-badge">載入中...</div>
@@ -168,7 +166,6 @@
             </div>
         </div>
 
-        <!-- 動態訓練計時控制台主區段 -->
         <div id="timer-container-section" style="display: none;">
             <div class="workout-section-title" id="panel-title-text">⏱ 訓練控制台</div>
             
@@ -178,7 +175,6 @@
                     <button id="skip-btn" class="btn-skip" onclick="skipRest()">跳過休息 ⏩</button>
                     <button id="counter-btn" class="btn-counter" onclick="incrementLaps()">折返跑完成 (目前：0 / 6 趟) 🏃‍♂️</button>
                     
-                    <!-- 音樂操作按鈕群組 -->
                     <div id="music-ctrl-box" class="music-controls-group">
                         <button class="btn-music-action" onclick="seekMusicPlaylist(5)">+5s ⏩</button>
                         <button id="play-pause-music-btn" class="btn-music-action" onclick="toggleMusicPlayback()">暫停音樂 ⏸️</button>
@@ -233,10 +229,19 @@
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         function onYouTubeIframeAPIReady() {
+            // 💡 修正亮點：將 playerVars 與 events 物件語法重新完美對齊，徹底阻斷致命卡死臭蟲（較建議此版本）
             ytPlayer = new YT.Player('yt-api-player', {
-                height: '100', width: '100', videoId: VIDEO_IDS[0],
-                playerVars: { 'playlist': VIDEO_IDS.join(','), 'loop': 1 },
-                events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange }
+                height: '100',
+                width: '100',
+                videoId: VIDEO_IDS[0],
+                playerVars: { 
+                    'playlist': VIDEO_IDS.join(','), 
+                    'loop': 1 
+                },
+                events: { 
+                    'onReady': onPlayerReady, 
+                    'onStateChange': onPlayerStateChange 
+                }
             });
         }
 
@@ -394,6 +399,31 @@
             0: { type: "rest", name: "修復放鬆日 🛁", desc: "🧘 課表：徹底拉伸、泡熱水澡恢復。", hasTimer: false }
         };
 
+        const weekNames = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+        let todayDay = new Date().getDay(); 
+        let activeWorkout = null; 
+        let currentRound = 1;
+        let currentStepIndex = 0;
+        let countdownInterval;
+        let isRunning = false;
+        let currentLaps = 0; 
+
+        const startBtn = document.getElementById('start-btn');
+        const skipBtn = document.getElementById('skip-btn');
+        const counterBtn = document.getElementById('counter-btn');
+        const musicCtrlBox = document.getElementById('music-ctrl-box');
+        const statusArea = document.getElementById('status-area');
+        const roundText = document.getElementById('round-text');
+        const taskText = document.getElementById('task-text');
+        const countdownText = document.getElementById('countdown-text');
+        const timerSection = document.getElementById('timer-container-section');
+        const mainActionBtn = document.getElementById('main-action-btn');
+        const listContainer = document.getElementById('workout-container-list');
+
+        window.onload = function() {
+            renderSystemPage();
+        };
+
         function selectMockMode(mode) {
             const strengthCB = document.getElementById('mock-strength-cb');
             const cardioCB = document.getElementById('mock-cardio-cb');
@@ -411,7 +441,6 @@
         }
 
         function renderSystemPage() {
-            // 🚨 修正核心（較建議此版本）：每次重新渲染時，一律由當前的 todayDay 變數動態從字典庫抓取，絕不放殘留死文字
             document.getElementById('daily-quote-text').textContent = dailyQuotes[todayDay];
             document.getElementById('welcome-date').textContent = `今天是 ${weekNames[todayDay]}`;
             
