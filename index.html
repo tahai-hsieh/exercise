@@ -68,23 +68,17 @@
         .btn-skip { background-color: #7f8c8d; color: white; border: none; padding: 8px 20px; font-size: 0.9rem; border-radius: 15px; cursor: pointer; margin-top: 12px; display: none; width: 100%; max-width: 160px; }
         .btn-counter { background-color: var(--purple-color); color: white; border: none; padding: 18px 20px; font-size: 1.25rem; font-weight: bold; border-radius: 12px; cursor: pointer; margin: 15px 0; display: none; width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
 
-        /* 🎵 音樂切歌控制鍵群組樣式 */
+        /* 音樂控制鍵群組 */
         .music-controls-group {
-            display: none; /* 預設隱藏，開練才顯現 */
+            display: none;
             gap: 10px;
             justify-content: center;
             margin-top: 12px;
         }
         .btn-music-action {
-            background-color: #f3f4f6;
-            color: #4b5563;
-            border: 1px solid #d1d5db;
-            padding: 6px 14px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.2s;
+            background-color: #f3f4f6; color: #4b5563; border: 1px solid #d1d5db;
+            padding: 6px 14px; font-size: 0.85rem; font-weight: bold; border-radius: 20px;
+            cursor: pointer; transition: all 0.2s;
         }
         .btn-music-action:active { background-color: #e5e7eb; }
 
@@ -168,7 +162,7 @@
                     <button id="skip-btn" class="btn-skip" onclick="skipRest()">跳過休息 ⏩</button>
                     <button id="counter-btn" class="btn-counter" onclick="incrementLaps()">折返跑完成 (目前：0 / 6 趟) 🏃‍♂️</button>
                     
-                    <!-- 🚨 全新音樂操作按鈕群組（較建議此版本） -->
+                    <!-- 音樂操作按鈕群組 -->
                     <div id="music-ctrl-box" class="music-controls-group">
                         <button class="btn-music-action" onclick="seekMusicPlaylist(5)">+5s ⏩</button>
                         <button class="btn-music-action" onclick="nextTrackPlaylist()">跳過此歌 ⏭️</button>
@@ -191,8 +185,14 @@
     <div id="yt-player-container"><div id="yt-api-player"></div></div>
 
     <script>
-        // 🎵 播放清單 ID 設定
-        const PLAYLIST_ID = "PL3oW2tjiIxvS1Bf_U9_4R0rI-gYyB0Hl7"; 
+        // 🎵 嵌入指定的 5 個影片 ID 陣列（較建議此版本）
+        const VIDEO_IDS = [
+            "qo478ZnMAsU",
+            "Uhut1655qEQ",
+            "oewANcF6hVY",
+            "0cJuTiX55Ys",
+            "zI_IaCD-j34"
+        ];
 
         let ytPlayer = null;
         let isPlayerReady = false;
@@ -208,16 +208,18 @@
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         function onYouTubeIframeAPIReady() {
+            // 自訂影片陣列必須載入第一首作為主體，其餘用 loadPlaylist 餵入
             ytPlayer = new YT.Player('yt-api-player', {
                 height: '100',
                 width: '100',
+                videoId: VIDEO_IDS[0],
                 playerVars: {
-                    'listType': 'playlist',
-                    'list': PLAYLIST_ID,
+                    'playlist': VIDEO_IDS.join(','), // 串聯成歌單達成循環基礎
                     'loop': 1
                 },
                 events: {
-                    'onReady': onPlayerReady
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange // 監聽完賽循環機制
                 }
             });
         }
@@ -229,6 +231,20 @@
             const savedTrackIndex = localStorage.getItem('yt_last_track_index');
             if (savedTrackIndex === null) {
                 ytPlayer.setShuffle(true);
+            }
+        }
+
+        // 🚨 智慧大循環監聽器：當偵測到清單播完或是終止時自動重啟（較建議此版本）
+        function onPlayerStateChange(event) {
+            // YT.PlayerState.ENDED (狀態碼為 0) 代表目前播放完畢
+            if (event.data === 0) {
+                if (typeof ytPlayer.getPlaylistIndex === 'function') {
+                    const currentIndex = ytPlayer.getPlaylistIndex();
+                    // 如果播到最後一首結束了，強制拉回第一首重新循環
+                    if (currentIndex === VIDEO_IDS.length - 1 || currentIndex === -1) {
+                        ytPlayer.playVideoAt(0);
+                    }
+                }
             }
         }
 
@@ -304,25 +320,27 @@
             }
         }
 
-        // 🚨 全新追加功能：快進指定秒數控制（較建議此版本）
         function seekMusicPlaylist(seconds) {
             if (isPlayerReady && ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
                 try {
                     const currentTime = ytPlayer.getCurrentTime();
                     ytPlayer.seekTo(currentTime + seconds, true);
-                    playSound(600, 0.05); // 點擊回饋短嗶聲
+                    playSound(600, 0.05); 
                 } catch(e) {}
             }
         }
 
-        // 🚨 全新追加功能：切換至下一首曲目（較建議此版本）
         function nextTrackPlaylist() {
             if (isPlayerReady && ytPlayer && typeof ytPlayer.nextVideo === 'function') {
                 try {
-                    ytPlayer.nextVideo();
+                    const currentIndex = ytPlayer.getPlaylistIndex();
+                    // 如果已經是自訂列表的最後一首，點擊跳過直接手動拉回第 0 首大循環
+                    if (currentIndex === VIDEO_IDS.length - 1) {
+                        ytPlayer.playVideoAt(0);
+                    } else {
+                        ytPlayer.nextVideo();
+                    }
                     playSound(700, 0.08); 
-                    
-                    // 切換後立刻把歷史秒數洗成 0 秒，避免舊紀錄干擾新歌
                     localStorage.setItem('yt_last_position', '0');
                 } catch(e) {}
             }
@@ -541,7 +559,6 @@
                 startBtn.textContent = "停止訓練 ⏹️";
                 startBtn.classList.add('stop-mode');
                 
-                // 展現切歌控制面板（較建議此版本）
                 musicCtrlBox.style.display = 'flex';
                 
                 playMusicPlaylist();
@@ -563,7 +580,6 @@
             skipBtn.style.display = 'none';
             counterBtn.style.display = 'none';
             
-            // 隱藏音樂切歌操作按鈕
             musicCtrlBox.style.display = 'none';
             
             clearAllHighlights();
@@ -763,7 +779,7 @@
             startBtn.classList.remove('stop-mode');
             skipBtn.style.display = 'none';
             counterBtn.style.display = 'none';
-            musicCtrlBox.style.display = 'none'; // 隱藏音樂切歌操作按鈕
+            musicCtrlBox.style.display = 'none'; 
 
             roundText.textContent = `第 ${activeWorkout.maxRounds} / ${activeWorkout.maxRounds} 組`;
             taskText.textContent = "🎉 恭喜完成今日完整訓練！卓越紀律！";
