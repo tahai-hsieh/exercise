@@ -105,39 +105,6 @@
             box-shadow: 0 6px 15px rgba(0,0,0,0.2);
         }
 
-        /* 休息日補訓選擇面板 */
-        .makeup-selector-box {
-            background: #fff9e6;
-            border: 2px solid #f1c40f;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        .makeup-counter-text {
-            font-weight: bold;
-            color: #b7950b;
-            font-size: 1.1rem;
-            margin-bottom: 10px;
-        }
-        .makeup-buttons-group {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-        .btn-select-makeup {
-            border: none;
-            padding: 10px 20px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            color: white;
-            transition: opacity 0.2s;
-        }
-        .btn-select-makeup:hover { opacity: 0.9; }
-        .btn-select-makeup.strength { background-color: var(--accent-color); }
-        .btn-select-makeup.cardio { background-color: var(--purple-color); }
-
         .checkin-section {
             display: flex;
             align-items: center;
@@ -161,7 +128,6 @@
         }
         .btn-checkin:disabled { background-color: #bbb; cursor: not-allowed; }
 
-        /* 測試面板 */
         .missed-checkbox-area {
             font-size: 0.95rem;
             color: var(--text-color);
@@ -174,7 +140,14 @@
             border-radius: 8px;
             border: 1px dashed var(--danger-color);
         }
-        .checkbox-item { display: flex; align-items: center; gap: 6px; cursor: pointer; text-align: left; }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            text-align: left;
+        }
 
         /* 訓練計時器控制面板 */
         .control-panel {
@@ -209,11 +182,20 @@
             transition: background 0.2s;
         }
 
+        /* 折返跑專用大計數按鈕 */
         .btn-counter {
-            background-color: var(--purple-color); color: white; border: none;
-            padding: 15px 25px; font-size: 1.3rem; font-weight: bold;
-            border-radius: 10px; cursor: pointer; margin: 15px 0;
-            display: none; width: 100%; box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background-color: var(--purple-color);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 15px 0;
+            display: none;
+            width: 100%;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .btn-counter:active { transform: scale(0.98); }
 
@@ -245,16 +227,6 @@
             <div id="today-badge" class="today-status-badge">載入中...</div>
             <div id="today-desc" class="today-desc">課表內容加載中...</div>
 
-            <!-- 🚨 休息日專用：未簽到補訓選擇面板 -->
-            <div id="makeup-selector-panel" class="makeup-selector-box">
-                <div id="makeup-counter-msg" class="makeup-counter-text">目前累積：核心未簽 0 次，爆汗未簽 0 次</div>
-                <div style="font-size:0.9rem; color:#666; margin-bottom:10px;">請選擇今天想要補訓哪一個課表：</div>
-                <div class="makeup-buttons-group">
-                    <button id="pick-strength-btn" class="btn-select-makeup strength" onclick="chooseMakeup('strength')">補修：核心肌力日 💪</button>
-                    <button id="pick-cardio-btn" class="btn-select-makeup cardio" onclick="chooseMakeup('cardio')">補修：體能爆汗日 🏃‍♂️</button>
-                </div>
-            </div>
-
             <!-- 智慧引導進入訓練按鈕 -->
             <button id="main-action-btn" class="btn-main-action" onclick="scrollToWorkoutPanel()">進入今日訓練菜單 ➔</button>
 
@@ -264,14 +236,17 @@
                 <button id="checkin-btn" class="btn-checkin" onclick="clickCheckIn()">每日簽到</button>
             </div>
 
-            <!-- 雙模擬測試按鈕（保留讓你手動灌債務測試功能） -->
+            <!-- 雙測試勾選區（勾選立刻即時覆蓋控制台，較建議此版本） -->
             <div class="missed-checkbox-area">
-                <span style="font-weight: bold; color: var(--danger-color); margin-bottom: 4px;">🛠 模擬測試面板 (手動增加未簽次數進行測試)：</span>
-                <div style="display:flex; gap:10px; width:100%; justify-content:center;">
-                    <button onclick="modifyMockDebt('strength', 1)" style="padding:4px 8px;">核心未簽 +1</button>
-                    <button onclick="modifyMockDebt('cardio', 1)" style="padding:4px 8px;">爆汗未簽 +1</button>
-                    <button onclick="clearAllDebt()" style="padding:4px 8px; background:#ddd; border:none; border-radius:4px;">債務歸零</button>
-                </div>
+                <span style="font-weight: bold; color: var(--danger-color); margin-bottom: 4px;">🛠 模擬補簽測試面板 (勾選立刻覆蓋，取消即還原)：</span>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="mock-strength-cb" onchange="selectMockMode('strength')">
+                    勾選模擬「之前有漏掉簽到」（測試核心肌力日補訓用）
+                </label>
+                <label class="checkbox-item">
+                    <input type="checkbox" id="mock-cardio-cb" onchange="selectMockMode('cardio')">
+                    勾選模擬「之前有漏掉簽到」（測試體能爆汗日補訓用）
+                </label>
             </div>
         </div>
 
@@ -283,7 +258,7 @@
                 <button id="start-btn" class="btn-start" onclick="toggleWorkout()">開始練習 🚀</button>
                 <div>
                     <button id="skip-btn" class="btn-skip" onclick="skipRest()">跳過休息 ⏩</button>
-                    <button id="counter-btn" class="btn-counter" onclick="incrementLaps()">折返跑完成 (目前：0 / 6 趟) 🏃‍♂️</button>
+                    <button id="counter-btn" class="btn-counter" onclick="incrementLaps()">折返跑完成 (目前：0 / 6 趟) 運行中... 🏃‍♂️</button>
                 </div>
                 
                 <div id="status-area" class="status-display">
@@ -300,7 +275,7 @@
     </div>
 
     <script>
-        // 課表基本配置定義
+        // 菜單 A：核心肌力日課表設定
         const strengthConfig = [
             { id: 0, name: "1. 側棒式轉體 (每邊 12 下)", type: "count" },
             { id: 1, name: "2. 休息", type: "timer", duration: 45, restAfter: true, isRestStep: true },
@@ -314,6 +289,7 @@
             { id: 9, name: "10. 休息", type: "timer", duration: 45, isFinalRest: true, restAfter: true, isRestStep: true }
         ];
 
+        // 菜單 B：體能爆汗日課表設定
         const cardioConfig = [
             { id: 0, name: "1. 動態暖身", type: "timer", duration: 300, exerciseAfter: true }, 
             { id: 1, name: "2. 20公尺連續折返跑 (共 6 趟)", type: "lapCounter" },
@@ -322,6 +298,7 @@
             { id: 4, name: "5. 組間大休息", type: "timer", duration: 180, isFinalRest: true, restAfter: true, isRestStep: true } 
         ];
 
+        // 原始週課表架構
         const originalSchedule = {
             1: { type: "strength", name: "核心肌力日 🔥", desc: "🎯 課表：練核心、雕刻腹肌、練單腳力量。", hasTimer: true, maxRounds: 3, activeConfig: strengthConfig, title: "⏱ 核心下肢循環訓練控制台" },
             2: { type: "rest", name: "完全休息日 💤", desc: "🛌 課表：完全休息。修復是為了走更長遠的路！", hasTimer: false },
@@ -341,9 +318,6 @@
         let countdownInterval;
         let isRunning = false;
         let currentLaps = 0; 
-        
-        // 追蹤當前點選的「補訓目標」種類，完賽時用來扣除次數
-        let currentActiveMakeupMode = null; 
 
         const startBtn = document.getElementById('start-btn');
         const skipBtn = document.getElementById('skip-btn');
@@ -355,53 +329,29 @@
         const timerSection = document.getElementById('timer-container-section');
         const mainActionBtn = document.getElementById('main-action-btn');
         const listContainer = document.getElementById('workout-container-list');
-        const makeupSelectorPanel = document.getElementById('makeup-selector-panel');
 
         window.onload = function() {
-            initLocalStorageCounters(); 
-            checkAndAuditMissedDays();   
             renderSystemPage();
         };
 
-        // 初始化資料庫數值
-        function initLocalStorageCounters() {
-            if (localStorage.getItem('uncheck_strength') === null) localStorage.setItem('uncheck_strength', '0');
-            if (localStorage.getItem('uncheck_cardio') === null) localStorage.setItem('uncheck_cardio', '0');
-            if (localStorage.getItem('lastAuditDate') === null) {
-                localStorage.setItem('lastAuditDate', new Date().toDateString());
+        // 即時監聽勾選狀態變更（較建議此版本）
+        function selectMockMode(mode) {
+            const strengthCB = document.getElementById('mock-strength-cb');
+            const cardioCB = document.getElementById('mock-cardio-cb');
+
+            if (mode === 'strength' && strengthCB.checked) {
+                cardioCB.checked = false;
+                localStorage.setItem('mockMode', 'strength');
+            } else if (mode === 'cardio' && cardioCB.checked) {
+                strengthCB.checked = false;
+                localStorage.setItem('mockMode', 'cardio');
+            } else {
+                localStorage.removeItem('mockMode');
             }
-        }
-
-        // 自動對帳記帳系統：比對上次登入時間，若中間漏掉訓練日未簽到則自動累加
-        function checkAndAuditMissedDays() {
-            const todayStr = new Date().toDateString();
-            const lastAuditStr = localStorage.getItem('lastAuditDate');
             
-            if (todayStr === lastAuditStr) return; // 今天對過帳了，跳出
-
-            let lastAuditDate = new Date(lastAuditStr);
-            let currentDate = new Date(todayStr);
-            
-            // 逐日往後推演比對
-            lastAuditDate.setDate(lastAuditDate.getDate() + 1);
-            while (lastAuditDate <= currentDate) {
-                const checkDay = lastAuditDate.getDay();
-                const dateKey = lastAuditDate.toDateString();
-                const checkedInLog = localStorage.getItem('checkedInDate');
-
-                // 如果那一天是訓練日，且使用者沒有在那天完成簽到
-                if (checkedInLog !== dateKey) {
-                    if (checkDay === 1 || checkDay === 3) {
-                        let count = parseInt(localStorage.getItem('uncheck_strength')) + 1;
-                        localStorage.setItem('uncheck_strength', count.toString());
-                    } else if (checkDay === 6) {
-                        let count = parseInt(localStorage.getItem('uncheck_cardio')) + 1;
-                        localStorage.setItem('uncheck_cardio', count.toString());
-                    }
-                }
-                lastAuditDate.setDate(lastAuditDate.getDate() + 1);
-            }
-            localStorage.setItem('lastAuditDate', todayStr);
+            // 如果當前正在倒數，切換測試勾選時立刻強制終斷重設，保護資料不混亂
+            if (isRunning) resetWorkout();
+            renderSystemPage();
         }
 
         function renderSystemPage() {
@@ -409,44 +359,45 @@
             
             const todayStr = new Date().toDateString();
             const isCheckedInToday = (localStorage.getItem('checkedInDate') === todayStr);
-            
-            // 讀取目前的記帳欠債組數（較建議此版本）
-            let uncheckStrength = parseInt(localStorage.getItem('uncheck_strength') || '0');
-            let uncheckCardio = parseInt(localStorage.getItem('uncheck_cardio') || '0');
+            const mockMode = localStorage.getItem('mockMode');
 
+            // 預設抓取今天正常的週課表
             activeWorkout = { ...originalSchedule[todayDay] };
 
-            // 預設將補訓面板隱藏
-            makeupSelectorPanel.style.display = 'none';
+            // 🚨 核心邏輯重整：只要勾選，不管今天是什麼日，立刻「原地」載入對應課表供點擊按鈕測試！
+            if (mockMode === 'strength') {
+                document.getElementById('mock-strength-cb').checked = true;
+                document.getElementById('mock-cardio-cb').checked = false;
 
-            // 🚨 核心改動：如果是完全休息日或放鬆日，且存有未簽到債務
-            if (activeWorkout.type === "rest" && (uncheckStrength > 0 || uncheckCardio > 0)) {
-                // 展現選擇面板
-                makeupSelectorPanel.style.display = 'block';
-                document.getElementById('makeup-counter-msg').textContent = `目前累積：核心未簽 ${uncheckStrength} 次，爆汗未簽 ${uncheckCardio} 次`;
-                
-                // 控制面板按鈕的可用性
-                document.getElementById('pick-strength-btn').style.display = (uncheckStrength > 0) ? 'inline-block' : 'none';
-                document.getElementById('pick-cardio-btn').style.display = (uncheckCardio > 0) ? 'inline-block' : 'none';
+                activeWorkout.type = "makeup";
+                activeWorkout.hasTimer = true;
+                activeWorkout.name = "🚨 測試補簽：核心肌力日菜單";
+                activeWorkout.desc = "已強制進入【核心下肢訓練】測試狀態。下方控制台已解鎖，可直接按下「開始練習」進行完整功能測試！";
+                activeWorkout.maxRounds = 3;
+                activeWorkout.activeConfig = strengthConfig;
+                activeWorkout.title = "⏱ 核心下肢循環訓練控制台";
+            } else if (mockMode === 'cardio') {
+                document.getElementById('mock-strength-cb').checked = false;
+                document.getElementById('mock-cardio-cb').checked = true;
 
-                // 如果使用者此時還沒點擊任何要補的課表，下方計時器維持隱藏
-                if (!currentActiveMakeupMode) {
-                    activeWorkout.hasTimer = false;
-                }
+                activeWorkout.type = "makeup";
+                activeWorkout.hasTimer = true;
+                activeWorkout.name = "🚨 測試補簽：體能爆汗日菜單";
+                activeWorkout.desc = "已強制進入【體能爆汗折返跑】測試狀態。下方控制台已解鎖，可直接按下「開始練習」進行完整功能測試！";
+                activeWorkout.maxRounds = 4;
+                activeWorkout.activeConfig = cardioConfig;
+                activeWorkout.title = "⏱ 體能爆汗折返跑訓練控制台";
             } else {
-                // 如果是正常的訓練日，清除殘留的補修模式標記
-                if (activeWorkout.type !== "rest") {
-                    currentActiveMakeupMode = null;
-                }
+                // 清除勾選一律無縫走回正常主程式
+                document.getElementById('mock-strength-cb').checked = false;
+                document.getElementById('mock-cardio-cb').checked = false;
             }
 
-            // 更新課表主看板 UI
             const badge = document.getElementById('today-badge');
             badge.textContent = activeWorkout.name;
             badge.className = "today-status-badge status-" + activeWorkout.type;
             document.getElementById('today-desc').textContent = activeWorkout.desc;
 
-            // 簽到按鈕控制
             const checkinBtn = document.getElementById('checkin-btn');
             const checkinText = document.getElementById('checkin-status-text');
             if (isCheckedInToday) {
@@ -461,7 +412,7 @@
                 checkinText.style.color = "var(--danger-color)";
             }
 
-            // 控制計時控制台顯現
+            // 控制計時器大面板的顯示/隱藏
             if (activeWorkout.hasTimer) {
                 mainActionBtn.style.display = 'inline-block';
                 timerSection.style.display = 'block';
@@ -473,31 +424,6 @@
             }
         }
 
-        // 使用者在休息日主動挑選補訓課表（較建議此版本）
-        function chooseMakeup(mode) {
-            currentActiveMakeupMode = mode;
-            if (isRunning) resetWorkout();
-
-            if (mode === 'strength') {
-                activeWorkout.name = "🚨 補修中：核心肌力日";
-                activeWorkout.desc = "正在補訓先前漏簽的【核心下肢菜單】。完整執行完 3 組後，系統未簽次數會自動減 1。";
-                activeWorkout.hasTimer = true;
-                activeWorkout.maxRounds = 3;
-                activeWorkout.activeConfig = strengthConfig;
-                activeWorkout.title = "⏱ 核心下肢循環訓練控制台";
-            } else if (mode === 'cardio') {
-                activeWorkout.name = "🚨 補修中：體能爆汗日";
-                activeWorkout.desc = "正在補訓先前漏簽的【折返跑體能菜單】。完整執行完 4 組後，系統未簽次數會自動減 1。";
-                activeWorkout.hasTimer = true;
-                activeWorkout.maxRounds = 4;
-                activeWorkout.activeConfig = cardioConfig;
-                activeWorkout.title = "⏱ 體能爆汗折返跑訓練控制台";
-            }
-            renderSystemPage();
-            scrollToWorkoutPanel();
-        }
-
-        // 建立清單 UI 結構
         function buildWorkoutListUI(configList) {
             listContainer.innerHTML = "";
             configList.forEach(step => {
@@ -550,20 +476,6 @@
         function clickCheckIn() {
             localStorage.setItem('checkedInDate', new Date().toDateString());
             alert("簽到成功！今天也要保持紀律，繼續加油！🔥");
-            renderSystemPage();
-        }
-
-        /* 🛠 測試面板專用控制函數 */
-        function modifyMockDebt(type, val) {
-            let key = (type === 'strength') ? 'uncheck_strength' : 'uncheck_cardio';
-            let current = parseInt(localStorage.getItem(key) || '0');
-            localStorage.setItem(key, (current + val).toString());
-            renderSystemPage();
-        }
-        function clearAllDebt() {
-            localStorage.setItem('uncheck_strength', '0');
-            localStorage.setItem('uncheck_cardio', '0');
-            currentActiveMakeupMode = null;
             renderSystemPage();
         }
 
@@ -750,7 +662,6 @@
             executeStep();
         }
 
-        // 結尾完賽：觸發自動數據減 1 邏輯（較建議此版本）
         function endWorkout() {
             clearInterval(countdownInterval);
             clearAllHighlights();
@@ -765,21 +676,6 @@
             taskText.textContent = "🎉 恭喜完成今日完整訓練！卓越紀律！";
             countdownText.style.color = "var(--primary-color)";
             countdownText.textContent = "🏆";
-
-            // 🚨 自動扣除核心邏輯：如果當前是在完全休息日執行補訓完賽
-            if (currentActiveMakeupMode === 'strength') {
-                let currentDebt = parseInt(localStorage.getItem('uncheck_strength') || '0');
-                if (currentDebt > 0) localStorage.setItem('uncheck_strength', (currentDebt - 1).toString());
-                currentActiveMakeupMode = null; // 扣除完畢後釋放狀態
-                alert("🏆 補課完成！核心肌力未簽次數已自動扣除 1 次！");
-                renderSystemPage(); 
-            } else if (currentActiveMakeupMode === 'cardio') {
-                let currentDebt = parseInt(localStorage.getItem('uncheck_cardio') || '0');
-                if (currentDebt > 0) localStorage.setItem('uncheck_cardio', (currentDebt - 1).toString());
-                currentActiveMakeupMode = null; 
-                alert("🏆 補課完成！體能爆汗未簽次數已自動扣除 1 次！");
-                renderSystemPage(); 
-            }
             
             setTimeout(() => playSound(523.25, 0.15), 0);
             setTimeout(() => playSound(659.25, 0.15), 150);
