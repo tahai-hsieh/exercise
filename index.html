@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>謝佳杰的自主訓練系統</title>
+    <title>謝佳杰的裁判養成之路</title>
     <style>
         :root {
             --primary-color: #4CAF50;
@@ -32,7 +32,23 @@
         }
 
         .container { width: 100%; max-width: 700px; }
-        h1 { text-align: center; color: #2c3e50; margin-top: 10px; margin-bottom: 20px; font-size: 1.6rem; }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            font-size: 1.6rem;
+        }
+        .daily-quote {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding: 0 10px;
+            font-weight: 500;
+        }
 
         /* 簽到主頁面板 */
         .home-panel {
@@ -70,10 +86,7 @@
 
         /* 音樂控制鍵群組 */
         .music-controls-group {
-            display: none;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 12px;
+            display: none; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap;
         }
         .btn-music-action {
             background-color: #f3f4f6; color: #4b5563; border: 1px solid #d1d5db;
@@ -105,7 +118,8 @@
 
         @media (min-width: 600px) {
             body { padding: 24px; }
-            h1 { font-size: 2rem; margin-bottom: 25px; }
+            h1 { font-size: 2rem; margin-bottom: 8px; }
+            .daily-quote { font-size: 1.05rem; margin-bottom: 25px; }
             .home-panel { padding: 28px; }
             .welcome-title { font-size: 1.5rem; }
             .today-desc { font-size: 1.05rem; padding: 15px; }
@@ -122,7 +136,8 @@
 <body>
 
     <div class="container">
-        <h1>🏋️ 謝佳杰的自主訓練系統</h1>
+        <h1>🥇 謝佳杰的裁判養成之路</h1>
+        <div id="daily-quote-text" class="daily-quote">“ 吹哨要果斷，核心要強悍。新的一週，從建立絕對的場上威嚴開始！ 💪 ”</div>
 
         <!-- 主頁：簽到與今日課表狀態 -->
         <div class="home-panel">
@@ -165,6 +180,8 @@
                     <!-- 音樂操作按鈕群組 -->
                     <div id="music-ctrl-box" class="music-controls-group">
                         <button class="btn-music-action" onclick="seekMusicPlaylist(5)">+5s ⏩</button>
+                        <!-- 🚨 全新暫停/播放按鈕 -->
+                        <button id="play-pause-music-btn" class="btn-music-action" onclick="toggleMusicPlayback()">暫停音樂 ⏸️</button>
                         <button class="btn-music-action" onclick="nextTrackPlaylist()">跳過此歌 ⏭️</button>
                     </div>
                 </center>
@@ -181,11 +198,9 @@
         </div>
     </div>
 
-    <!-- 隱藏的 YouTube 播放載體 -->
     <div id="yt-player-container"><div id="yt-api-player"></div></div>
 
     <script>
-        // 🎵 嵌入指定的 5 個影片 ID 陣列（較建議此版本）
         const VIDEO_IDS = [
             "qo478ZnMAsU",
             "Uhut1655qEQ",
@@ -194,53 +209,48 @@
             "zI_IaCD-j34"
         ];
 
+        const dailyQuotes = {
+            1: "“ 吹哨要果斷，核心要強悍。新的一週，從建立絕對的場上威嚴開始！ 💪 ”",
+            2: "“ 卓越的判決來自於無數次的肌肉記憶，今天的汗水是明天的精準判斷。 ⚡ ”",
+            3: "“ 體能是裁判的第二生命，把核心練得跟鋼板一樣硬，場上誰都無法動搖你！ 🔥 ”",
+            4: "“ 紀律不是明天的口號，而是今天的每一組分腿蹲與波比跳。 🏋️‍♂️ ”",
+            5: "“ 保留最完美的體能，為了週末球場上的全速爆發做準備。 💤 ”",
+            6: "“ 20公尺折返跑是速度與意志的對決，跟著節奏，實地轟炸它！ 🏃‍♂️ ”",
+            0: "“ 懂得修復與徹底拉伸的裁判，才能在職涯的路上走得比誰都遠。 🛁 ”"
+        };
+
         let ytPlayer = null;
         let isPlayerReady = false;
         let saveMusicInterval = null; 
+        let isMusicPlaying = false; // 追蹤音樂當前是否處於播放狀態
 
         const NORMAL_VOLUME = 50; 
         const DUCKED_VOLUME = 15; 
 
-        // 載入 YouTube IFrame API
         const tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         const firstScriptTag = document.getElementsByTagName('script')[0];
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
         function onYouTubeIframeAPIReady() {
-            // 自訂影片陣列必須載入第一首作為主體，其餘用 loadPlaylist 餵入
             ytPlayer = new YT.Player('yt-api-player', {
-                height: '100',
-                width: '100',
-                videoId: VIDEO_IDS[0],
-                playerVars: {
-                    'playlist': VIDEO_IDS.join(','), // 串聯成歌單達成循環基礎
-                    'loop': 1
-                },
-                events: {
-                    'onReady': onPlayerReady,
-                    'onStateChange': onPlayerStateChange // 監聽完賽循環機制
-                }
+                height: '100', width: '100', videoId: VIDEO_IDS[0],
+                playerVars: { 'playlist': VIDEO_IDS.join(','), 'loop': 1 },
+                events: { 'onReady': onPlayerReady, 'onStateChange': onPlayerStateChange }
             });
         }
 
         function onPlayerReady(event) {
             isPlayerReady = true;
             ytPlayer.setVolume(NORMAL_VOLUME);
-            
             const savedTrackIndex = localStorage.getItem('yt_last_track_index');
-            if (savedTrackIndex === null) {
-                ytPlayer.setShuffle(true);
-            }
+            if (savedTrackIndex === null) ytPlayer.setShuffle(true);
         }
 
-        // 🚨 智慧大循環監聽器：當偵測到清單播完或是終止時自動重啟（較建議此版本）
         function onPlayerStateChange(event) {
-            // YT.PlayerState.ENDED (狀態碼為 0) 代表目前播放完畢
             if (event.data === 0) {
                 if (typeof ytPlayer.getPlaylistIndex === 'function') {
                     const currentIndex = ytPlayer.getPlaylistIndex();
-                    // 如果播到最後一首結束了，強制拉回第一首重新循環
                     if (currentIndex === VIDEO_IDS.length - 1 || currentIndex === -1) {
                         ytPlayer.playVideoAt(0);
                     }
@@ -250,25 +260,17 @@
 
         function fadeVideoVolume(targetVolume, durationMs) {
             if (!isPlayerReady || !ytPlayer || typeof ytPlayer.getVolume !== 'function') return;
-            
             const startVolume = ytPlayer.getVolume();
             const volumeDiff = targetVolume - startVolume;
             if (volumeDiff === 0) return;
 
             const startTime = performance.now();
-
             function step(timestamp) {
                 const elapsed = timestamp - startTime;
                 const progress = Math.min(elapsed / durationMs, 1);
                 const currentVol = Math.round(startVolume + (volumeDiff * progress));
-                
-                try {
-                    ytPlayer.setVolume(currentVol);
-                } catch(e) {}
-
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                }
+                try { ytPlayer.setVolume(currentVol); } catch(e) {}
+                if (progress < 1) window.requestAnimationFrame(step);
             }
             window.requestAnimationFrame(step);
         }
@@ -289,21 +291,21 @@
                         ytPlayer.playVideo();
                         fadeVideoVolume(NORMAL_VOLUME, 200);
                     }
+                    isMusicPlaying = true;
+                    document.getElementById('play-pause-music-btn').textContent = "暫停音樂 ⏸️";
 
                     clearInterval(saveMusicInterval);
                     saveMusicInterval = setInterval(() => {
                         if (ytPlayer && typeof ytPlayer.getPlaylistIndex === 'function') {
                             const currentIndex = ytPlayer.getPlaylistIndex();
                             const currentPos = ytPlayer.getCurrentTime();
-                            
                             if (ytPlayer.getPlayerState() === 1 && currentIndex !== -1) {
                                 localStorage.setItem('yt_last_track_index', currentIndex.toString());
                                 localStorage.setItem('yt_last_position', currentPos.toString());
                             }
                         }
                     }, 2000);
-
-                } catch (e) { console.log("音樂接續播放失敗：", e); }
+                } catch (e) { console.log("音樂播放失敗：", e); }
             }
         }
 
@@ -316,8 +318,28 @@
                         localStorage.setItem('yt_last_position', ytPlayer.getCurrentTime().toString());
                     }
                     ytPlayer.pauseVideo();
+                    isMusicPlaying = false;
+                    document.getElementById('play-pause-music-btn').textContent = "播放音樂 ▶️";
                 } catch (e) { console.log("音樂暫停失敗：", e); }
             }
+        }
+
+        // 🚨 全新智慧雙向暫停/恢復控制函數（較建議此版本）
+        function toggleMusicPlayback() {
+            if (!isPlayerReady || !ytPlayer) return;
+            
+            const btn = document.getElementById('play-pause-music-btn');
+            if (isMusicPlaying) {
+                // 如果目前在播，平滑降音並暫停
+                fadeVideoVolume(0, 200);
+                setTimeout(() => {
+                    stopMusicPlaylist(); // 內部會精準記帳並切換 isMusicPlaying 狀態
+                }, 200);
+            } else {
+                // 如果目前暫停，啟動續播程式
+                playMusicPlaylist();
+            }
+            playSound(600, 0.05); // 按鈕觸覺反饋
         }
 
         function seekMusicPlaylist(seconds) {
@@ -334,12 +356,13 @@
             if (isPlayerReady && ytPlayer && typeof ytPlayer.nextVideo === 'function') {
                 try {
                     const currentIndex = ytPlayer.getPlaylistIndex();
-                    // 如果已經是自訂列表的最後一首，點擊跳過直接手動拉回第 0 首大循環
                     if (currentIndex === VIDEO_IDS.length - 1) {
                         ytPlayer.playVideoAt(0);
                     } else {
                         ytPlayer.nextVideo();
                     }
+                    isMusicPlaying = true;
+                    document.getElementById('play-pause-music-btn').textContent = "暫停音樂 ⏸️";
                     playSound(700, 0.08); 
                     localStorage.setItem('yt_last_position', '0');
                 } catch(e) {}
@@ -378,36 +401,9 @@
             0: { type: "rest", name: "修復放鬆日 🛁", desc: "🧘 課表：徹底拉伸、泡熱水澡恢復。", hasTimer: false }
         };
 
-        const weekNames = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
-        
-        let todayDay = new Date().getDay(); 
-        let activeWorkout = null; 
-        let currentRound = 1;
-        let currentStepIndex = 0;
-        let countdownInterval;
-        let isRunning = false;
-        let currentLaps = 0; 
-
-        const startBtn = document.getElementById('start-btn');
-        const skipBtn = document.getElementById('skip-btn');
-        const counterBtn = document.getElementById('counter-btn');
-        const musicCtrlBox = document.getElementById('music-ctrl-box');
-        const statusArea = document.getElementById('status-area');
-        const roundText = document.getElementById('round-text');
-        const taskText = document.getElementById('task-text');
-        const countdownText = document.getElementById('countdown-text');
-        const timerSection = document.getElementById('timer-container-section');
-        const mainActionBtn = document.getElementById('main-action-btn');
-        const listContainer = document.getElementById('workout-container-list');
-
-        window.onload = function() {
-            renderSystemPage();
-        };
-
         function selectMockMode(mode) {
             const strengthCB = document.getElementById('mock-strength-cb');
             const cardioCB = document.getElementById('mock-cardio-cb');
-
             if (mode === 'strength' && strengthCB.checked) {
                 cardioCB.checked = false;
                 localStorage.setItem('mockMode', 'strength');
@@ -417,12 +413,12 @@
             } else {
                 localStorage.removeItem('mockMode');
             }
-            
             if (isRunning) resetWorkout();
             renderSystemPage();
         }
 
         function renderSystemPage() {
+            document.getElementById('daily-quote-text').textContent = dailyQuotes[todayDay];
             document.getElementById('welcome-date').textContent = `今天是 ${weekNames[todayDay]}`;
             
             const todayStr = new Date().toDateString();
@@ -434,25 +430,17 @@
             if (mockMode === 'strength') {
                 document.getElementById('mock-strength-cb').checked = true;
                 document.getElementById('mock-cardio-cb').checked = false;
-
-                activeWorkout.type = "makeup";
-                activeWorkout.hasTimer = true;
+                activeWorkout.type = "makeup"; activeWorkout.hasTimer = true;
                 activeWorkout.name = "🚨 測試補簽：核心肌力日菜單";
                 activeWorkout.desc = "已強制進入【核心下肢訓練】測試狀態。下方控制台已解鎖，可直接按下「開始練習」進行完整功能測試！";
-                activeWorkout.maxRounds = 3;
-                activeWorkout.activeConfig = strengthConfig;
-                activeWorkout.title = "⏱ 核心下肢循環訓練控制台";
+                activeWorkout.maxRounds = 3; activeWorkout.activeConfig = strengthConfig; activeWorkout.title = "⏱ 核心下肢循環訓練控制台";
             } else if (mockMode === 'cardio') {
                 document.getElementById('mock-strength-cb').checked = false;
                 document.getElementById('mock-cardio-cb').checked = true;
-
-                activeWorkout.type = "makeup";
-                activeWorkout.hasTimer = true;
+                activeWorkout.type = "makeup"; activeWorkout.hasTimer = true;
                 activeWorkout.name = "🚨 測試補簽：體能爆汗日菜單";
                 activeWorkout.desc = "已強制進入【體能爆汗折返跑】測試狀態。下方控制台已解鎖，可直接按下「開始練習」進行完整功能測試！";
-                activeWorkout.maxRounds = 4;
-                activeWorkout.activeConfig = cardioConfig;
-                activeWorkout.title = "⏱ 體能爆汗折返跑訓練控制台";
+                activeWorkout.maxRounds = 4; activeWorkout.activeConfig = cardioConfig; activeWorkout.title = "⏱ 體能爆汗折返跑訓練控制台";
             } else {
                 document.getElementById('mock-strength-cb').checked = false;
                 document.getElementById('mock-cardio-cb').checked = false;
@@ -466,15 +454,11 @@
             const checkinBtn = document.getElementById('checkin-btn');
             const checkinText = document.getElementById('checkin-status-text');
             if (isCheckedInToday) {
-                checkinBtn.disabled = true;
-                checkinBtn.textContent = "已簽到";
-                checkinText.innerHTML = "🎉 今日已完成簽到！太棒了！";
-                checkinText.style.color = "#27ae60";
+                checkinBtn.disabled = true; checkinBtn.textContent = "已簽到";
+                checkinText.innerHTML = "🎉 今日已完成簽到！太棒了！"; checkinText.style.color = "#27ae60";
             } else {
-                checkinBtn.disabled = false;
-                checkinBtn.textContent = "每日簽到";
-                checkinText.innerHTML = "今日尚未簽到 📝";
-                checkinText.style.color = "var(--danger-color)";
+                checkinBtn.disabled = false; checkinBtn.textContent = "每日簽到";
+                checkinText.innerHTML = "今日尚未簽到 📝"; checkinText.style.color = "var(--danger-color)";
             }
 
             if (activeWorkout.hasTimer) {
@@ -494,9 +478,7 @@
                 const li = document.createElement('li');
                 li.className = "workout-item" + (step.isRestStep ? " rest-item" : "");
                 li.id = `item-${step.id}`;
-                
-                let countText = "";
-                let descText = "";
+                let countText = ""; let descText = "";
                 
                 if (activeWorkout.title.includes("體能爆汗")) {
                     const cardioDescs = [
@@ -506,8 +488,7 @@
                         { count: "左右各 15 下", desc: "💡 提示：坐在地上軀幹微後仰，雙腳微懸空，雙手左右交替觸地轉體。" },
                         { count: "3 分鐘", desc: "☕ 提示：徹底深呼吸放鬆，補充水分，準備下一組爆發（第4組免休息）。" }
                     ];
-                    countText = cardioDescs[step.id].count;
-                    descText = cardioDescs[step.id].desc;
+                    countText = cardioDescs[step.id].count; descText = cardioDescs[step.id].desc;
                 } else {
                     const strengthDescs = [
                         { count: "每邊 12 下", desc: "💡 提示：手肘撐地維持側棒式，上手往身體下方延伸，再帶回向上延伸。" },
@@ -521,203 +502,108 @@
                         { count: "持續 40 秒", desc: "💡 提示：下蹲後跳、跳回再向上爆發跳躍。請維持固定節奏。" },
                         { count: "45 秒", desc: "第3組免休息" }
                     ];
-                    countText = strengthDescs[step.id].count;
-                    descText = strengthDescs[step.id].desc;
+                    countText = strengthDescs[step.id].count; descText = strengthDescs[step.id].desc;
                 }
-
-                li.innerHTML = `
-                    <div class="workout-title"><span>${step.name}</span><span class="workout-count">${countText}</span></div>
-                    ${descText ? `<p class="workout-desc">${descText}</p>` : ''}
-                `;
+                li.innerHTML = `<div class="workout-title"><span>${step.name}</span><span class="workout-count">${countText}</span></div>${descText ? `<p class="workout-desc">${descText}</p>` : ''}`;
                 listContainer.appendChild(li);
             });
         }
 
-        function scrollToWorkoutPanel() {
-            timerSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        function scrollToWorkoutPanel() { timerSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        function clickCheckIn() { localStorage.setItem('checkedInDate', new Date().toDateString()); alert("簽到成功！今天也要保持紀律，繼續加油！🔥"); renderSystemPage(); }
+        function formatTimeDisplay(totalSeconds) { if (totalSeconds >= 60) { return `${Math.floor(totalSeconds / 60)}分${totalSeconds % 60}秒`; } return `${totalSeconds}s`; }
 
-        function clickCheckIn() {
-            localStorage.setItem('checkedInDate', new Date().toDateString());
-            alert("簽到成功！今天也要保持紀律，繼續加油！🔥");
-            renderSystemPage();
-        }
-
-        function formatTimeDisplay(totalSeconds) {
-            if (totalSeconds >= 60) {
-                const minutes = Math.floor(totalSeconds / 60);
-                const seconds = totalSeconds % 60;
-                return `${minutes}分${seconds}秒`;
-            }
-            return `${totalSeconds}s`;
-        }
-
-        /* ==================== 計時訓練核心引擎 ==================== */
         function toggleWorkout() {
             if (!isRunning) {
-                isRunning = true;
-                startBtn.textContent = "停止訓練 ⏹️";
-                startBtn.classList.add('stop-mode');
-                
+                isRunning = true; startBtn.textContent = "停止訓練 ⏹️"; startBtn.classList.add('stop-mode');
                 musicCtrlBox.style.display = 'flex';
-                
-                playMusicPlaylist();
-                initWorkout();
-            } else {
-                resetWorkout();
-            }
+                playMusicPlaylist(); initWorkout();
+            } else { resetWorkout(); }
         }
 
         function resetWorkout() {
-            clearInterval(countdownInterval);
-            isRunning = false;
-            currentRound = 1;
-            currentStepIndex = 0;
-            currentLaps = 0;
-            startBtn.textContent = "開始練習 🚀";
-            startBtn.classList.remove('stop-mode');
-            statusArea.style.display = 'none';
-            skipBtn.style.display = 'none';
-            counterBtn.style.display = 'none';
-            
-            musicCtrlBox.style.display = 'none';
-            
-            clearAllHighlights();
-            countdownText.onclick = null;
-            countdownText.style.cursor = "default";
-            
+            clearInterval(countdownInterval); isRunning = false; currentRound = 1; currentStepIndex = 0; currentLaps = 0;
+            startBtn.textContent = "開始練習 🚀"; startBtn.classList.remove('stop-mode');
+            statusArea.style.display = 'none'; skipBtn.style.display = 'none'; counterBtn.style.display = 'none'; musicCtrlBox.style.display = 'none';
+            clearAllHighlights(); countdownText.onclick = null; countdownText.style.cursor = "default";
             stopMusicPlaylist();
         }
 
         function initWorkout() {
-            statusArea.style.display = 'block';
-            currentRound = 1;
-            currentStepIndex = 0;
-            currentLaps = 0;
-            clearAllHighlights();
+            statusArea.style.display = 'block'; currentRound = 1; currentStepIndex = 0; currentLaps = 0; clearAllHighlights();
             
-            fadeVideoVolume(DUCKED_VOLUME, 150);
-            runPreparation(3, () => {
-                executeStep();
-            });
+            // 如果暫停按鈕之前被使用者按過導致音樂沒播，開局依然會強制降音解鎖
+            if (isMusicPlaying) fadeVideoVolume(DUCKED_VOLUME, 150);
+            
+            runPreparation(3, () => { executeStep(); });
         }
 
         function runPreparation(seconds, callback) {
-            taskText.textContent = "準備倒數";
-            skipBtn.style.display = 'none';
-            counterBtn.style.display = 'none';
-            countdownText.style.color = "var(--accent-color)";
-            countdownText.textContent = seconds;
-            playSound(440, 0.1);
-
+            taskText.textContent = "準備倒數"; skipBtn.style.display = 'none'; counterBtn.style.display = 'none';
+            countdownText.style.color = "var(--accent-color)"; countdownText.textContent = seconds; playSound(440, 0.1);
             let sec = seconds;
             countdownInterval = setInterval(() => {
                 sec--;
-                if (sec > 0) {
-                    countdownText.textContent = sec;
-                    playSound(440, 0.1);
-                } else if (sec === 0) {
-                    countdownText.textContent = "開始！";
-                    playSound(880, 0.3);
-                } else {
-                    clearInterval(countdownInterval);
-                    callback();
-                }
+                if (sec > 0) { countdownText.textContent = sec; playSound(440, 0.1); }
+                else if (sec === 0) { countdownText.textContent = "開始！"; playSound(880, 0.3); }
+                else { clearInterval(countdownInterval); callback(); }
             }, 1000);
         }
 
         function executeStep() {
-            if (currentRound > activeWorkout.maxRounds) {
-                endWorkout();
-                return;
-            }
-
+            if (currentRound > activeWorkout.maxRounds) { endWorkout(); return; }
             const step = activeWorkout.activeConfig[currentStepIndex];
-
-            if (currentRound === activeWorkout.maxRounds && step.isFinalRest) {
-                endWorkout();
-                return;
-            }
+            if (currentRound === activeWorkout.maxRounds && step.isFinalRest) { endWorkout(); return; }
 
             roundText.textContent = `第 ${currentRound} / ${activeWorkout.maxRounds} 組`;
-            taskText.textContent = step.name;
-            highlightItem(step.id);
-
+            taskText.textContent = step.name; highlightItem(step.id);
             skipBtn.style.display = (step.isRestStep) ? 'inline-block' : 'none';
             
             if (step.type === "lapCounter") {
-                counterBtn.style.display = 'inline-block';
-                currentLaps = 0;
+                counterBtn.style.display = 'inline-block'; currentLaps = 0;
                 counterBtn.textContent = `折返跑完成 (目前：${currentLaps} / 6 趟) 🏃‍♂️`;
-                countdownText.style.color = "var(--purple-color)";
-                countdownText.textContent = "RUN!";
-                
-                fadeVideoVolume(NORMAL_VOLUME, 300);
+                countdownText.style.color = "var(--purple-color)"; countdownText.textContent = "RUN!";
+                if (isMusicPlaying) fadeVideoVolume(NORMAL_VOLUME, 300); 
                 return;
-            } else {
-                counterBtn.style.display = 'none';
-            }
+            } else { counterBtn.style.display = 'none'; }
 
             if (step.type === "timer") {
                 let timeLeft = step.duration;
-                
-                if (timeLeft <= 5) {
-                    fadeVideoVolume(DUCKED_VOLUME, 150);
-                    countdownText.style.color = "var(--danger-color)";
-                } else {
-                    fadeVideoVolume(NORMAL_VOLUME, 300);
-                    countdownText.style.color = "var(--accent-color)";
+                if (timeLeft <= 5) { 
+                    if (isMusicPlaying) fadeVideoVolume(DUCKED_VOLUME, 150); 
+                    countdownText.style.color = "var(--danger-color)"; 
+                } else { 
+                    if (isMusicPlaying) fadeVideoVolume(NORMAL_VOLUME, 300); 
+                    countdownText.style.color = "var(--accent-color)"; 
                 }
-
                 countdownText.textContent = formatTimeDisplay(timeLeft);
                 
                 countdownInterval = setInterval(() => {
                     timeLeft--;
                     if (timeLeft > 0) {
                         countdownText.textContent = formatTimeDisplay(timeLeft);
-                        
                         if (timeLeft <= 5) {
                             countdownText.style.color = "var(--danger-color)";
-                            if (timeLeft === 5) {
-                                fadeVideoVolume(DUCKED_VOLUME, 300); 
-                            }
+                            if (timeLeft === 5 && isMusicPlaying) fadeVideoVolume(DUCKED_VOLUME, 300);
                             playSound(550, 0.1);
                         }
                     } else {
-                        clearInterval(countdownInterval);
-                        playSound(880, 0.4);
-                        
+                        clearInterval(countdownInterval); playSound(880, 0.4);
                         countdownText.style.color = "var(--danger-color)";
-                        if (step.exerciseAfter) {
-                            countdownText.textContent = "開始休息";
-                        } else if (step.restAfter) {
-                            countdownText.textContent = "開始訓練";
-                        } else {
-                            countdownText.textContent = "開始下一個動作";
-                        }
-                        
+                        if (step.exerciseAfter) countdownText.textContent = "開始休息";
+                        else if (step.restAfter) countdownText.textContent = "開始訓練";
+                        else countdownText.textContent = "開始下一個動作";
                         setTimeout(() => { nextStep(); }, 1000);
                     }
                 }, 1000);
             } else if (step.type === "count") {
-                fadeVideoVolume(NORMAL_VOLUME, 300);
-                
-                countdownText.style.color = "var(--secondary-color)";
-                countdownText.textContent = "DONE ➔";
-                countdownText.style.cursor = "pointer";
+                if (isMusicPlaying) fadeVideoVolume(NORMAL_VOLUME, 300);
+                countdownText.style.color = "var(--secondary-color)"; countdownText.textContent = "DONE ➔"; countdownText.style.cursor = "pointer";
                 countdownText.onclick = function() {
-                    countdownText.onclick = null;
-                    countdownText.style.cursor = "default";
-                    countdownText.style.color = "var(--danger-color)";
-                    
-                    fadeVideoVolume(DUCKED_VOLUME, 150);
-                    
-                    if (activeWorkout.title.includes("體能爆汗")) {
-                        countdownText.textContent = "開始下一個動作";
-                    } else {
-                        countdownText.textContent = "開始休息";
-                    }
-                    
+                    countdownText.onclick = null; countdownText.style.cursor = "default"; countdownText.style.color = "var(--danger-color)";
+                    if (isMusicPlaying) fadeVideoVolume(DUCKED_VOLUME, 150);
+                    if (activeWorkout.title.includes("體能爆汗")) countdownText.textContent = "開始下一個動作";
+                    else countdownText.textContent = "開始休息";
                     setTimeout(() => { nextStep(); }, 1000);
                 };
             }
@@ -725,69 +611,43 @@
 
         function incrementLaps() {
             if (activeWorkout.activeConfig[currentStepIndex].type !== "lapCounter") return;
-            currentLaps++;
-            playSound(587.33, 0.1);
-            
+            currentLaps++; playSound(587.33, 0.1);
             if (currentLaps >= 6) {
-                counterBtn.style.display = 'none';
-                playSound(880, 0.4);
-                
-                fadeVideoVolume(DUCKED_VOLUME, 150);
-                countdownText.style.color = "var(--danger-color)";
-                countdownText.textContent = "開始下一個動作";
-                
+                counterBtn.style.display = 'none'; playSound(880, 0.4);
+                if (isMusicPlaying) fadeVideoVolume(DUCKED_VOLUME, 150); 
+                countdownText.style.color = "var(--danger-color)"; countdownText.textContent = "開始下一個動作";
                 setTimeout(() => { nextStep(); }, 1000);
-            } else {
-                counterBtn.textContent = `折返完成 (目前：${currentLaps} / 6 趟) 🏃‍♂️`;
-            }
+            } else { counterBtn.textContent = `折返跑完成 (目前：${currentLaps} / 6 趟) 🏃‍♂️`; }
         }
 
         function skipRest() {
-            clearInterval(countdownInterval);
-            skipBtn.style.display = 'none';
-            playSound(880, 0.4);
-            
-            fadeVideoVolume(DUCKED_VOLUME, 150);
-            countdownText.style.color = "var(--danger-color)";
-            countdownText.textContent = "開始訓練";
+            clearInterval(countdownInterval); skipBtn.style.display = 'none'; playSound(880, 0.4);
+            if (isMusicPlaying) fadeVideoVolume(DUCKED_VOLUME, 150); 
+            countdownText.style.color = "var(--danger-color)"; countdownText.textContent = "開始訓練";
             setTimeout(() => { nextStep(); }, 1000);
         }
 
         function nextStep() {
-            clearInterval(countdownInterval);
-            currentStepIndex++;
-            
+            clearInterval(countdownInterval); currentStepIndex++;
             if (currentStepIndex >= activeWorkout.activeConfig.length) {
-                currentStepIndex = 0;
-                currentRound++;
+                currentStepIndex = 0; currentRound++;
                 if (currentRound <= activeWorkout.maxRounds) {
-                    clearAllHighlights();
-                    fadeVideoVolume(DUCKED_VOLUME, 150);
-                    runPreparation(3, () => { executeStep(); });
-                    return;
+                    clearAllHighlights(); 
+                    if (isMusicPlaying) fadeVideoVolume(DUCKED_VOLUME, 150);
+                    runPreparation(3, () => { executeStep(); }); return;
                 }
             }
             executeStep();
         }
 
         function endWorkout() {
-            clearInterval(countdownInterval);
-            clearAllHighlights();
-            isRunning = false;
-            
-            startBtn.textContent = "再練一次 💪";
-            startBtn.classList.remove('stop-mode');
-            skipBtn.style.display = 'none';
-            counterBtn.style.display = 'none';
-            musicCtrlBox.style.display = 'none'; 
-
+            clearInterval(countdownInterval); clearAllHighlights(); isRunning = false;
+            startBtn.textContent = "再練一次 💪"; startBtn.classList.remove('stop-mode');
+            skipBtn.style.display = 'none'; counterBtn.style.display = 'none'; musicCtrlBox.style.display = 'none';
             roundText.textContent = `第 ${activeWorkout.maxRounds} / ${activeWorkout.maxRounds} 組`;
             taskText.textContent = "🎉 恭喜完成今日完整訓練！卓越紀律！";
-            countdownText.style.color = "var(--primary-color)";
-            countdownText.textContent = "🏆";
-            
+            countdownText.style.color = "var(--primary-color)"; countdownText.textContent = "🏆";
             stopMusicPlaylist(); 
-            
             setTimeout(() => playSound(523.25, 0.15), 0);
             setTimeout(() => playSound(659.25, 0.15), 150);
             setTimeout(() => playSound(783.99, 0.3), 300);
@@ -796,10 +656,7 @@
         function highlightItem(id) {
             clearAllHighlights();
             const el = document.getElementById(`item-${id}`);
-            if (el) {
-                el.classList.add('active');
-                if (activeWorkout.activeConfig[id].isRestStep) el.classList.add('active-rest');
-            }
+            if (el) { el.classList.add('active'); if (activeWorkout.activeConfig[id].isRestStep) el.classList.add('active-rest'); }
         }
 
         function clearAllHighlights() {
@@ -807,11 +664,8 @@
                 const el = document.getElementById(`item-${i}`);
                 if (el) {
                     el.className = "workout-item";
-                    if (activeWorkout && activeWorkout.activeConfig[i] && activeWorkout.activeConfig[i].isRestStep) {
-                        el.className += " rest-item";
-                    } else if (activeWorkout && !activeWorkout.title.includes("體能爆汗") && (i === 1 || i === 3 || i === 5 || i === 7 || i === 9)) {
-                        el.className += " rest-item";
-                    }
+                    if (activeWorkout && activeWorkout.activeConfig[i] && activeWorkout.activeConfig[i].isRestStep) el.className += " rest-item";
+                    else if (activeWorkout && !activeWorkout.title.includes("體能爆汗") && (i === 1 || i === 3 || i === 5 || i === 7 || i === 9)) el.className += " rest-item";
                 }
             }
         }
@@ -819,18 +673,11 @@
         function playSound(frequency, duration) {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
-                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + duration);
-            } catch (e) {
-                console.log("Audio Error:", e);
-            }
+                const oscillator = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+                oscillator.type = 'sine'; oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime); oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination); oscillator.start(); oscillator.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
         }
     </script>
 </body>
