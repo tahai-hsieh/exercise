@@ -2,8 +2,18 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>謝佳杰的裁判養成之路</title>
+
+    <!-- iOS 加入主畫面圖標 (維持原圖) -->
+    <link rel="apple-touch-icon" href="icon_exercise.png">
+    
+    <!-- 一般網頁 Favicon (使用動態 Canvas 裁切為圓形) -->
+    <link id="dynamic-favicon" rel="icon" type="image/png" href="icon_exercise.png">
+
+    <!-- Web App Manifest (支援加入主畫面與 PWA 應用) -->
+    <link rel="manifest" id="manifest-placeholder">
+
     <style>
         :root {
             --primary-color: #4CAF50;
@@ -17,7 +27,10 @@
             --warning-color: #f1c40f;
         }
 
-        * { box-sizing: border-box; }
+        * { 
+            box-sizing: border-box; 
+            touch-action: manipulation; /* 禁用雙擊放大等預設雙擊手勢 */
+        }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -30,6 +43,8 @@
             flex-direction: column;
             align-items: center;
             -webkit-tap-highlight-color: transparent;
+            user-select: none; /* 防止訓練期間誤選取文字 */
+            -webkit-user-select: none;
         }
 
         .container { width: 100%; max-width: 700px; }
@@ -229,6 +244,100 @@
     <div id="yt-player-container"><div id="yt-api-player"></div></div>
 
     <script>
+        /* ==================== 1. 防雙擊放大 & 鎖定螢幕與方向 ==================== */
+        // 防連點/雙擊縮放 (Double-tap to zoom)
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        // 防多指捏合縮放 (Pinch-to-zoom)
+        document.addEventListener('gesturestart', function (e) {
+            e.preventDefault();
+        });
+
+        // 螢幕方向鎖定 (若瀏覽器支援)
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('portrait-primary').catch(() => {});
+        }
+
+        /* ==================== 2. 動態生成 Web App Manifest & 離線 Service Worker ==================== */
+        // 自動生成 Manifest Data URI
+        const manifestData = {
+            name: "謝佳杰的裁判養成之路",
+            short_name: "裁判養成",
+            start_url: "./",
+            display: "standalone",
+            background_color: "#f5f5f5",
+            theme_color: "#2196F3",
+            orientation: "portrait",
+            icons: [
+                {
+                    src: "icon_exercise.png",
+                    sizes: "192x192",
+                    type: "image/png",
+                    purpose: "any maskable"
+                },
+                {
+                    src: "icon_exercise.png",
+                    sizes: "512x512",
+                    type: "image/png"
+                }
+            ]
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifestData)], { type: 'application/json' });
+        document.getElementById('manifest-placeholder').setAttribute('href', URL.createObjectURL(manifestBlob));
+
+        // 註冊離線 Service Worker (使用 Blob 動態建置離線快取系統)
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'referee-app-v1';
+                const ASSETS = ['./', 'icon_exercise.png'];
+                self.addEventListener('install', (e) => {
+                    e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
+                });
+                self.addEventListener('fetch', (e) => {
+                    e.respondWith(
+                        caches.match(e.request).then((response) => response || fetch(e.request).catch(() => caches.match('./')))
+                    );
+                });
+            `;
+            const swBlob = new Blob([swCode], { type: 'text/javascript' });
+            navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+        }
+
+        /* ==================== 3. 將網頁 Favicon 自動轉換為圓形 ==================== */
+        window.addEventListener('DOMContentLoaded', () => {
+            const img = new Image();
+            img.src = 'icon_exercise.png';
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const size = Math.min(img.width, img.height);
+                canvas.width = size;
+                canvas.height = size;
+
+                // 畫出圓形遮罩
+                ctx.beginPath();
+                ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+                ctx.closePath();
+                ctx.clip();
+
+                ctx.drawImage(img, 0, 0, size, size);
+                
+                // 替換 Favicon 圖片為圓形繪製結果
+                const faviconLink = document.getElementById('dynamic-favicon');
+                if (faviconLink) {
+                    faviconLink.href = canvas.toDataURL('image/png');
+                }
+            };
+        });
+
+        /* ==================== 4. 主應用程式邏輯 ==================== */
         const VIDEO_IDS = [
             "qo478ZnMAsU",
             "Uhut1655qEQ",
@@ -431,10 +540,10 @@
         let currentStepIndex = 0;
         let countdownInterval;
         let isRunning = false;
-        let isPaused = false; // 🚨 追蹤是否處於暫停狀態
-        let timeLeft = 0;     // 儲存當前動作剩餘秒數
+        let isPaused = false;
+        let timeLeft = 0;     
         let currentLaps = 0; 
-        let currentStepType = ""; // 紀錄當前動作是倒數、計次還是折返跑
+        let currentStepType = "";
 
         const startBtn = document.getElementById('start-btn');
         const pauseBtn = document.getElementById('pause-btn');
@@ -613,7 +722,7 @@
             stopMusicPlaylist();
         }
 
-        // 🚨 全新智慧「暫停 / 恢復」控制函數（較建議此版本）
+        // 「暫停 / 恢復」控制函數（較建議此版本）
         function togglePauseWorkout() {
             if (!isRunning) return;
 
@@ -643,7 +752,6 @@
                 if (currentStepType === "timer") {
                     resumeTimerEngine();
                 } else {
-                    // 如果是計次或折返跑模式，不需背景倒數，只需重新打亮即可
                     isPaused = false;
                 }
                 playSound(600, 0.05);
@@ -746,7 +854,7 @@
             }
         }
 
-        // 獨立拆分出的時間倒數引擎，支援暫停後原地滿血復活（較建議此版本）
+        // 時間倒數引擎
         function resumeTimerEngine() {
             isPaused = false;
             clearInterval(countdownInterval);
@@ -775,33 +883,31 @@
             }, 1000);
         }
 
-        // 🚨 全新追加功能：手動上一個/下一個動作強制微調切換（較建議此版本）
+        // 手動上一個/下一個動作微調切換
         function navigateStep(direction) {
             if (!isRunning) return;
-            clearInterval(countdownInterval); // 終斷原本的倒數
+            clearInterval(countdownInterval); 
             countdownText.onclick = null;
             countdownText.style.cursor = "default";
             countdownText.style.opacity = "1";
 
             currentStepIndex += direction;
 
-            // 1. 如果邊界溢出往前，推回上一組的最後一個動作
             if (currentStepIndex < 0) {
                 if (currentRound > 1) {
                     currentRound--;
                     currentStepIndex = activeWorkout.activeConfig.length - 1;
                 } else {
-                    currentStepIndex = 0; // 已經是最初起點
+                    currentStepIndex = 0; 
                 }
             } 
-            // 2. 如果邊界溢出往後，推到下一組的第一個動作
             else if (currentStepIndex >= activeWorkout.activeConfig.length) {
                 currentStepIndex = 0;
                 currentRound++;
             }
 
-            playSound(523.25, 0.05); // 換動作輕微反饋音
-            executeStep(); // 原地滿血重新載入新關卡
+            playSound(523.25, 0.05); 
+            executeStep(); 
         }
 
         function incrementLaps() {
