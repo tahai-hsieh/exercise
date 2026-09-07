@@ -50,26 +50,34 @@
 
         .container { width: 100%; max-width: 700px; position: relative; }
 
-        /* 右上角月曆歷史按鈕 */
-        .top-calendar-btn {
+        /* 右上角按鈕群組 */
+        .top-action-bar {
             position: absolute;
             top: 5px;
             right: 5px;
+            display: flex;
+            gap: 6px;
+            z-index: 10;
+        }
+        .top-btn {
             background: #ffffff;
             border: 1.5px solid var(--secondary-color);
             color: var(--secondary-color);
-            padding: 5px 12px;
+            padding: 5px 10px;
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 2px 6px rgba(0,0,0,0.08);
             display: flex;
             align-items: center;
-            gap: 4px;
-            z-index: 10;
+            gap: 3px;
         }
-        .top-calendar-btn:active {
+        .top-btn.task-btn {
+            border-color: #e67e22;
+            color: #d35400;
+        }
+        .top-btn:active {
             background-color: #f0f7ff;
             transform: scale(0.96);
         }
@@ -77,11 +85,11 @@
         h1 {
             text-align: center;
             color: #2c3e50;
-            margin-top: 15px;
+            margin-top: 25px;
             margin-bottom: 5px;
             font-size: 1.6rem;
-            padding-right: 70px;
-            padding-left: 10px;
+            padding-left: 5px;
+            padding-right: 5px;
         }
         .daily-quote {
             text-align: center;
@@ -112,9 +120,10 @@
             background-color: #2c3e50; color: white; border: none; padding: 12px 25px; font-size: 1.15rem; font-weight: bold; border-radius: 25px; cursor: pointer; margin-bottom: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: all 0.2s; display: none; width: 100%; max-width: 320px;
         }
 
-        .checkin-section { display: flex; align-items: center; justify-content: space-between; background: #edf7ed; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: left; }
+        .checkin-section { display: flex; align-items: center; justify-content: space-between; background: #edf7ed; padding: 12px; border-radius: 8px; margin-bottom: 15px; text-align: left; gap: 8px; flex-wrap: wrap; }
         .btn-checkin { background-color: var(--primary-color); color: white; border: none; padding: 10px 16px; font-size: 0.95rem; font-weight: bold; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
         .btn-checkin:disabled { background-color: #bbb; cursor: not-allowed; }
+        .btn-use-pass { background-color: #8e44ad; color: white; border: none; padding: 8px 12px; font-size: 0.85rem; font-weight: bold; border-radius: 6px; cursor: pointer; }
 
         .missed-checkbox-area { font-size: 0.85rem; color: var(--text-color); display: flex; flex-direction: column; align-items: flex-start; gap: 10px; background: #fff0f0; padding: 12px; border-radius: 8px; border: 1px dashed var(--danger-color); }
         .checkbox-item { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; text-align: left; width: 100%; }
@@ -172,27 +181,29 @@
             position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0;
         }
 
-        /* 月曆彈窗樣式 */
+        /* 彈窗通用樣式 */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.5); display: none; justify-content: center;
             align-items: center; z-index: 100; padding: 10px;
         }
-        .calendar-card {
+        .modal-card {
             background: #ffffff; width: 100%; max-width: 520px; border-radius: 16px;
             padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); max-height: 90vh;
             display: flex; flex-direction: column;
         }
-        .calendar-header {
-            display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
         }
-        .calendar-header-title { font-size: 1.25rem; font-weight: bold; color: #2c3e50; }
+        .modal-header-title { font-size: 1.25rem; font-weight: bold; color: #2c3e50; }
+        .close-modal-btn {
+            background: none; border: none; font-size: 1.5rem; color: #888; cursor: pointer; padding: 0 5px;
+        }
+
+        /* 月曆專屬樣式 */
         .calendar-selectors { display: flex; gap: 8px; }
         .calendar-selectors select {
             padding: 6px 8px; border-radius: 8px; border: 1px solid #ccc; font-weight: bold; font-size: 0.9rem;
-        }
-        .close-calendar-btn {
-            background: none; border: none; font-size: 1.5rem; color: #888; cursor: pointer; padding: 0 5px;
         }
         .calendar-grid-header {
             display: grid; grid-template-columns: repeat(7, 1fr); text-align: center;
@@ -220,10 +231,44 @@
         .day-cell.clickable { cursor: pointer; transition: transform 0.1s; }
         .day-cell.clickable:active { transform: scale(0.95); background-color: #fff9e6; }
 
+        /* 任務系統樣式 */
+        .task-tabs {
+            display: flex; gap: 8px; border-bottom: 2px solid #eee; margin-bottom: 12px;
+        }
+        .task-tab-btn {
+            background: none; border: none; padding: 8px 12px; font-weight: bold; font-size: 0.95rem;
+            color: #7f8c8d; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px;
+        }
+        .task-tab-btn.active {
+            color: var(--secondary-color); border-bottom-color: var(--secondary-color);
+        }
+        .task-list-container {
+            overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 2px;
+        }
+        .task-card {
+            background: #fdfdfd; border: 1px solid #e0e0e0; border-radius: 10px;
+            padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        }
+        .task-info { display: flex; flex-direction: column; text-align: left; }
+        .task-title { font-weight: bold; font-size: 0.92rem; color: #2c3e50; }
+        .task-reward { font-size: 0.78rem; color: #e67e22; font-weight: 600; }
+        .task-right-col { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .task-progress { font-size: 0.95rem; font-weight: 900; color: #2980b9; }
+        .btn-claim-task {
+            background-color: var(--primary-color); color: white; border: none; padding: 5px 12px;
+            border-radius: 6px; font-size: 0.8rem; font-weight: bold; cursor: pointer;
+        }
+        .btn-claim-task:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+        .reward-shop-area {
+            background: #fff8eb; border: 1px dashed #f39c12; border-radius: 10px; padding: 12px;
+            margin-top: 10px; text-align: left; display: flex; justify-content: space-between; align-items: center;
+        }
+
         @media (min-width: 600px) {
             body { padding: 24px; }
-            h1 { font-size: 2rem; margin-bottom: 8px; padding-right: 0; }
-            .top-calendar-btn { top: 15px; right: 20px; font-size: 0.95rem; padding: 6px 15px; }
+            h1 { font-size: 2rem; margin-top: 15px; margin-bottom: 8px; }
+            .top-action-bar { top: 15px; right: 20px; }
+            .top-btn { font-size: 0.9rem; padding: 6px 12px; }
             .daily-quote { font-size: 1.05rem; margin-bottom: 25px; }
             .home-panel { padding: 28px; }
             .welcome-title { font-size: 1.5rem; }
@@ -243,8 +288,11 @@
 <body>
 
     <div class="container">
-        <!-- 右上角月曆歷史按鈕 -->
-        <button class="top-calendar-btn" onclick="openCalendarModal()">📅 簽到月曆</button>
+        <!-- 右上角雙彈窗按鈕 -->
+        <div class="top-action-bar">
+            <button class="top-btn" onclick="openCalendarModal()">📅 簽到月曆</button>
+            <button class="top-btn task-btn" onclick="openTaskModal()">🎯 任務清單</button>
+        </div>
 
         <h1>🥇 謝佳杰的裁判養成之路</h1>
         <div id="daily-quote-text" class="daily-quote">載入今日激勵語錄中...</div>
@@ -260,8 +308,14 @@
             </center>
 
             <div class="checkin-section">
-                <div><span id="checkin-status-text" style="font-size:0.95rem; font-weight:bold;">今日尚未簽到 📝</span></div>
-                <button id="checkin-btn" class="btn-checkin" onclick="clickCheckIn()">每日簽到</button>
+                <div>
+                    <span id="checkin-status-text" style="font-size:0.95rem; font-weight:bold;">今日尚未簽到 📝</span>
+                    <span id="reward-tickets-text" style="font-size:0.8rem; color:#8e44ad; display:block; margin-top:2px;">🎟 免訓券庫存: 0 張</span>
+                </div>
+                <div style="display:flex; gap:6px; align-items:center;">
+                    <button id="use-pass-btn" class="btn-use-pass" style="display:none;" onclick="useRestTicket()">使用免訓券 🏖️</button>
+                    <button id="checkin-btn" class="btn-checkin" onclick="clickCheckIn()">每日簽到</button>
+                </div>
             </div>
 
             <div class="missed-checkbox-area">
@@ -282,13 +336,11 @@
             <div class="workout-section-title" id="panel-title-text">⏱ 訓練控制台</div>
             
             <div class="control-panel">
-                <!-- 雙按鈕核心控制列（較建議此版本） -->
                 <div class="main-btn-row">
                     <button id="start-btn" class="btn-start" onclick="toggleWorkout()">開始練習 🚀</button>
                     <button id="pause-btn" class="btn-pause" onclick="togglePauseWorkout()">暫停訓練 ⏸️</button>
                 </div>
 
-                <!-- 動作調整微調鍵 -->
                 <div id="step-adjust-box" class="step-adjust-group">
                     <button class="btn-step-adjust" onclick="navigateStep(-1)">⏮️ 上一個動作</button>
                     <button class="btn-step-adjust" onclick="navigateStep(1)">下一個動作 ⏭️</button>
@@ -305,7 +357,6 @@
                     <div id="countdown-text" class="timer-countdown">3</div>
                 </div>
 
-                <!-- 音樂操作獨立鍵群組 -->
                 <div id="music-ctrl-box" class="music-controls-group">
                     <button class="btn-music-action" onclick="seekMusicPlaylist(5)">+5s ⏩</button>
                     <button id="play-pause-music-btn" class="btn-music-action" onclick="toggleMusicPlayback()">暫停音樂 ⏸️</button>
@@ -320,19 +371,44 @@
 
     <!-- 簽到與訓練歷史月曆彈窗 -->
     <div id="calendar-modal" class="modal-overlay" onclick="closeCalendarModal(event)">
-        <div class="calendar-card" onclick="event.stopPropagation()">
-            <div class="calendar-header">
-                <div class="calendar-header-title">📅 簽到紀錄月曆</div>
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-header-title">📅 簽到紀錄月曆</div>
                 <div class="calendar-selectors">
                     <select id="cal-year-select" onchange="updateCalendarView()"></select>
                     <select id="cal-month-select" onchange="updateCalendarView()"></select>
                 </div>
-                <button class="close-calendar-btn" onclick="toggleCalendarModal(false)">✖</button>
+                <button class="close-modal-btn" onclick="toggleCalendarModal(false)">✖</button>
             </div>
             <div class="calendar-grid-header">
                 <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
             </div>
             <div id="calendar-days" class="calendar-days-container"></div>
+        </div>
+    </div>
+
+    <!-- 任務清單與成就彈窗 -->
+    <div id="task-modal" class="modal-overlay" onclick="closeTaskModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-header-title">🎯 裁判養成任務中心</div>
+                <button class="close-modal-btn" onclick="toggleTaskModal(false)">✖</button>
+            </div>
+            
+            <div class="task-tabs">
+                <button id="tab-daily-btn" class="task-tab-btn active" onclick="switchTaskTab('daily')">📅 每日任務</button>
+                <button id="tab-total-btn" class="task-tab-btn" onclick="switchTaskTab('total')">🏆 總成就清單</button>
+            </div>
+
+            <div id="task-list-box" class="task-list-container"></div>
+
+            <div class="reward-shop-area">
+                <div>
+                    <div style="font-weight: bold; color: #d35400; font-size: 0.9rem;">🎁 獎勵兌換所</div>
+                    <div id="star-points-text" style="font-size: 0.8rem; color: #555;">持有榮譽點數：0 ⭐｜免訓券：0 張</div>
+                </div>
+                <button class="btn-claim-task" onclick="exchangeRestTicket()">兌換免訓券 (5⭐)</button>
+            </div>
         </div>
     </div>
 
@@ -597,15 +673,14 @@
             { id: 4, name: "5. 組間大休息", type: "timer", duration: 180, isFinalRest: true, restAfter: true, isRestStep: true } 
         ];
 
-        // 原始排定的每週課表：一三五肌力、二四休息、六體能、日放鬆
         const originalSchedule = {
             1: { type: "strength", name: "核心肌力日 🔥", desc: "🎯 課表：練核心、雕刻腹肌、練單腳力量。", hasTimer: true, maxRounds: 3, activeConfig: strengthConfig, title: "⏱ 核心下肢循環訓練控制台" },
-            2: { type: "rest", name: "完全休息日 💤", desc: "🛌 課表：完全休息。修復是為了走更長遠的路！", hasTimer: false },
+            2: { type: "rest", name: "完全休息日 💤", desc: "🛌 課表：完全休息。修復是為了走更長遠的路！記得完成今日打卡。", hasTimer: false },
             3: { type: "strength", name: "核心肌力日 🔥", desc: "🎯 課表：強化核心剛性，讓肚子跟鋼板一樣硬。", hasTimer: true, maxRounds: 3, activeConfig: strengthConfig, title: "⏱ 核心下肢循環訓練控制台" },
-            4: { type: "rest", name: "完全休息日 💤", desc: "🛌 課表：完全休息（保留體能給週末）。", hasTimer: false },
+            4: { type: "rest", name: "完全休息日 💤", desc: "🛌 課表：完全休息（保留體能給週末）。記得完成今日打卡。", hasTimer: false },
             5: { type: "strength", name: "核心肌力日 🔥", desc: "🎯 課表：練核心、雕刻腹肌、練單腳力量。", hasTimer: true, maxRounds: 3, activeConfig: strengthConfig, title: "⏱ 核心下肢循環訓練控制台" },
             6: { type: "cardio", name: "體能爆汗日 ⚡", desc: "跑場、操場或開音檔，實地轟炸 20 公尺裁判折返跑（Beep Test）與動態腹肌。", hasTimer: true, maxRounds: 4, activeConfig: cardioConfig, title: "⏱ 體能爆汗折返跑訓練控制台" },
-            0: { type: "rest", name: "修復放鬆日 🛁", desc: "🧘 課表：徹底拉伸、泡熱水澡恢復。", hasTimer: false }
+            0: { type: "rest", name: "修復放鬆日 🛁", desc: "🧘 課表：徹底拉伸、泡熱水澡恢復。記得完成今日打卡。", hasTimer: false }
         };
 
         const weekNames = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
@@ -655,22 +730,215 @@
             }
         }
 
-        function isUserCheckedIn(dateStr) {
-            return getStoredList('user_checked_dates').includes(dateStr);
-        }
-        function isWorkoutDone(dateStr) {
-            return getStoredList('workout_done_dates').includes(dateStr);
-        }
+        function isUserCheckedIn(dateStr) { return getStoredList('user_checked_dates').includes(dateStr); }
+        function isWorkoutDone(dateStr) { return getStoredList('workout_done_dates').includes(dateStr); }
 
-        // 判定當天是否算「簽到成功」：
-        // 休息日只需勾選；訓練日必須同時具備「按簽到」且「完成訓練」
         function isDayOfficiallyCompleted(dateStr, schedule) {
             const checked = isUserCheckedIn(dateStr);
             const done = isWorkoutDone(dateStr);
-            if (!schedule.hasTimer) {
-                return checked; // 休息日只要點過簽到就算成功
-            }
+            if (!schedule.hasTimer) return checked;
             return checked && done;
+        }
+
+        /* ==================== 5. 任務系統與成就兌換核心引擎 ==================== */
+        let currentTaskTab = 'daily';
+
+        function getPoints() { return parseInt(localStorage.getItem('user_star_points') || '0'); }
+        function addPoints(pts) {
+            const current = getPoints();
+            localStorage.setItem('user_star_points', (current + pts).toString());
+        }
+
+        function getRestTickets() { return parseInt(localStorage.getItem('user_rest_tickets') || '0'); }
+        function addRestTickets(count) {
+            const current = getRestTickets();
+            localStorage.setItem('user_rest_tickets', (current + count).toString());
+        }
+
+        // 計算連續完成天數 (Streak)
+        function calculateCurrentStreak() {
+            let streak = 0;
+            let checkDate = new Date();
+            while (true) {
+                const dateStr = getFormattedDate(checkDate);
+                const dayOfWeek = checkDate.getDay();
+                const schedule = originalSchedule[dayOfWeek];
+                if (isDayOfficiallyCompleted(dateStr, schedule)) {
+                    streak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else {
+                    // 若當天尚未結束且尚未簽到，允許檢查昨天以維持 streak
+                    if (dateStr === getFormattedDate(new Date())) {
+                        checkDate.setDate(checkDate.getDate() - 1);
+                        continue;
+                    }
+                    break;
+                }
+            }
+            return streak;
+        }
+
+        // 計算累計成功簽到總天數
+        function calculateTotalCompletedDays() {
+            const checkedList = getStoredList('user_checked_dates');
+            let count = 0;
+            checkedList.forEach(dStr => {
+                const parts = dStr.split('-');
+                const d = new Date(parts[0], parts[1] - 1, parts[2]);
+                const schedule = originalSchedule[d.getDay()];
+                if (isDayOfficiallyCompleted(dStr, schedule)) {
+                    count++;
+                }
+            });
+            return count;
+        }
+
+        function openTaskModal() {
+            toggleTaskModal(true);
+            renderTaskList();
+        }
+        function toggleTaskModal(show) {
+            document.getElementById('task-modal').style.display = show ? 'flex' : 'none';
+        }
+        function closeTaskModal(e) {
+            if (e.target.id === 'task-modal') toggleTaskModal(false);
+        }
+
+        function switchTaskTab(tab) {
+            currentTaskTab = tab;
+            document.getElementById('tab-daily-btn').className = 'task-tab-btn' + (tab === 'daily' ? ' active' : '');
+            document.getElementById('tab-total-btn').className = 'task-tab-btn' + (tab === 'total' ? ' active' : '');
+            renderTaskList();
+        }
+
+        function renderTaskList() {
+            const container = document.getElementById('task-list-box');
+            container.innerHTML = "";
+            const todayStr = getFormattedDate(new Date());
+
+            document.getElementById('star-points-text').textContent = `持有榮譽點數：${getPoints()} ⭐｜免訓券：${getRestTickets()} 張`;
+            document.getElementById('reward-tickets-text').textContent = `🎟 免訓券庫存: ${getRestTickets()} 張`;
+
+            if (currentTaskTab === 'daily') {
+                const dailyTasksClaimed = getStoredList(`claimed_daily_tasks_${todayStr}`);
+                const isChecked = isUserCheckedIn(todayStr);
+                const isDone = isWorkoutDone(todayStr);
+                const isDualDone = isDayOfficiallyCompleted(todayStr, originalSchedule[todayDay]);
+
+                const dailyDefs = [
+                    { id: "d1", title: "完成每日簽到打卡", reward: "獲得 1 ⭐", need: 1, current: isChecked ? 1 : 0, rewardPts: 1 },
+                    { id: "d2", title: "完成今日課表訓練", reward: "獲得 1 ⭐", need: 1, current: isDone ? 1 : 0, rewardPts: 1 },
+                    { id: "d3", title: "達成今日雙重指標 (簽到+訓練)", reward: "獲得 2 ⭐", need: 1, current: isDualDone ? 1 : 0, rewardPts: 2 }
+                ];
+
+                dailyDefs.forEach(task => {
+                    const claimed = dailyTasksClaimed.includes(task.id);
+                    const canClaim = (!claimed && task.current >= task.need);
+
+                    const card = document.createElement('div');
+                    card.className = "task-card";
+                    card.innerHTML = `
+                        <div class="task-info">
+                            <span class="task-title">${task.title}</span>
+                            <span class="task-reward">🎁 ${task.reward}</span>
+                        </div>
+                        <div class="task-right-col">
+                            <span class="task-progress">${task.current}/${task.need}</span>
+                            <button class="btn-claim-task" ${canClaim ? '' : 'disabled'} onclick="claimDailyTask('${task.id}', ${task.rewardPts})">
+                                ${claimed ? '已領取' : '領取'}
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } else {
+                // 總任務成就：循環累計制
+                const totalProgressMap = JSON.parse(localStorage.getItem('total_tasks_progress') || '{}');
+                const streak = calculateCurrentStreak();
+                const totalCompleted = calculateTotalCompletedDays();
+
+                const totalDefs = [
+                    { id: "t_streak_5", title: "連續達標 5 天 (循環累計)", reward: "獲得 3 ⭐", need: 5, currentVal: streak, rewardPts: 3 },
+                    { id: "t_total_10", title: "累計完成 10 天簽到 (循環累計)", reward: "獲得 5 ⭐", need: 10, currentVal: totalCompleted, rewardPts: 5 },
+                    { id: "t_total_20", title: "累計完成 20 天簽到 (循環累計)", reward: "獲得 10 ⭐", need: 20, currentVal: totalCompleted, rewardPts: 10 },
+                    { id: "t_total_30", title: "累計完成 30 天簽到 (循環累計)", reward: "獲得 15 ⭐ + 免訓券 1 張", need: 30, currentVal: totalCompleted, rewardPts: 15, extraTicket: 1 }
+                ];
+
+                totalDefs.forEach(task => {
+                    const baseOffset = totalProgressMap[task.id] || 0;
+                    let activeVal = task.currentVal - baseOffset;
+                    if (activeVal < 0) activeVal = 0;
+                    const canClaim = (activeVal >= task.need);
+
+                    const card = document.createElement('div');
+                    card.className = "task-card";
+                    card.innerHTML = `
+                        <div class="task-info">
+                            <span class="task-title">${task.title}</span>
+                            <span class="task-reward">🎁 ${task.reward}</span>
+                        </div>
+                        <div class="task-right-col">
+                            <span class="task-progress">${Math.min(activeVal, task.need)}/${task.need}</span>
+                            <button class="btn-claim-task" ${canClaim ? '' : 'disabled'} onclick="claimTotalTask('${task.id}', ${task.need}, ${task.rewardPts}, ${task.extraTicket || 0})">
+                                領取
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+        }
+
+        function claimDailyTask(taskId, pts) {
+            const todayStr = getFormattedDate(new Date());
+            addToList(`claimed_daily_tasks_${todayStr}`, taskId);
+            addPoints(pts);
+            alert(`🎉 恭喜領取每日任務獎勵：獲得 ${pts} ⭐！`);
+            renderTaskList();
+            renderSystemPage();
+        }
+
+        function claimTotalTask(taskId, needCount, pts, extraTicket) {
+            const totalProgressMap = JSON.parse(localStorage.getItem('total_tasks_progress') || '{}');
+            const currentOffset = totalProgressMap[taskId] || 0;
+            totalProgressMap[taskId] = currentOffset + needCount;
+            localStorage.setItem('total_tasks_progress', JSON.stringify(totalProgressMap));
+
+            addPoints(pts);
+            if (extraTicket > 0) addRestTickets(extraTicket);
+
+            alert(`🏆 恭喜達成總成就！獲得 ${pts} ⭐${extraTicket > 0 ? ' 與免訓券 1 張' : ''}！進度已重置並重新開始累計！`);
+            renderTaskList();
+            renderSystemPage();
+        }
+
+        function exchangeRestTicket() {
+            const pts = getPoints();
+            if (pts >= 5) {
+                addPoints(-5);
+                addRestTickets(1);
+                alert("🎉 兌換成功！已獲得 1 張「免訓券」！");
+                renderTaskList();
+                renderSystemPage();
+            } else {
+                alert(`榮譽點數不足！目前有 ${pts} ⭐，兌換免訓券需要 5 ⭐！加油完成任務吧！`);
+            }
+        }
+
+        function useRestTicket() {
+            const tickets = getRestTickets();
+            const todayFormatted = getFormattedDate(new Date());
+            if (tickets <= 0) {
+                alert("目前沒有免訓券可以使用喔！可透過完成任務累積兌換！");
+                return;
+            }
+            if (confirm("確定要消耗 1 張免訓券將今日訓練轉為「免訓休息日」並自動完成簽到嗎？🏖️")) {
+                addRestTickets(-1);
+                addToList('user_checked_dates', todayFormatted);
+                addToList('workout_done_dates', todayFormatted); // 免除訓練直接標記完成
+                alert("使用成功！今日已轉換為免訓休息日，簽到已生效！好好放鬆修復吧！☕");
+                renderSystemPage();
+            }
         }
 
         window.onload = function() {
@@ -738,10 +1006,20 @@
 
             const checkinBtn = document.getElementById('checkin-btn');
             const checkinText = document.getElementById('checkin-status-text');
+            const usePassBtn = document.getElementById('use-pass-btn');
             
             const todayChecked = isUserCheckedIn(todayFormatted);
             const todayDone = isWorkoutDone(todayFormatted);
             const todayOfficiallyDone = isDayOfficiallyCompleted(todayFormatted, originalSchedule[todayDay]);
+
+            document.getElementById('reward-tickets-text').textContent = `🎟 免訓券庫存: ${getRestTickets()} 張`;
+
+            // 當天有訓練且尚未達標時，顯現「使用免訓券」按鈕
+            if (activeWorkout.hasTimer && !todayOfficiallyDone && getRestTickets() > 0) {
+                usePassBtn.style.display = 'inline-block';
+            } else {
+                usePassBtn.style.display = 'none';
+            }
 
             if (todayOfficiallyDone) {
                 checkinBtn.disabled = true; 
@@ -765,7 +1043,7 @@
                 checkinText.style.color = "var(--danger-color)";
             }
 
-            if (activeWorkout.hasTimer) {
+            if (activeWorkout.hasTimer && !todayOfficiallyDone) {
                 mainActionBtn.style.display = 'inline-block';
                 timerSection.style.display = 'block';
                 document.getElementById('panel-title-text').textContent = activeWorkout.title;
@@ -827,14 +1105,14 @@
                     alert("已勾選簽到！別忘了完成下方訓練課表才算正式簽到成功喔！💪");
                 }
             } else {
-                alert("簽到成功！今天好好休息放鬆！🛁");
+                alert("休息日簽到成功！今天好好修復放鬆！🛁");
             }
             renderSystemPage(); 
         }
 
         function formatTimeDisplay(totalSeconds) { if (totalSeconds >= 60) { return `${Math.floor(totalSeconds / 60)}分${totalSeconds % 60}秒`; } return `${totalSeconds}s`; }
 
-        /* ==================== 5. 月曆視圖與歷史紀錄引擎 ==================== */
+        /* ==================== 6. 月曆視圖與歷史紀錄引擎 ==================== */
         function initCalendarSelectors() {
             const yearSelect = document.getElementById('cal-year-select');
             const monthSelect = document.getElementById('cal-month-select');
@@ -909,10 +1187,16 @@
                 } else if (!isPastOrToday) {
                     badgeHtml = `<span class="day-badge badge-rest">未到期</span>`;
                 } else if (!schedule.hasTimer) {
-                    // 休息日未簽到
-                    badgeHtml = `<span class="day-badge badge-rest">休息日 💤</span>`;
+                    badgeHtml = `<span class="day-badge badge-missed">未簽到 ⭕</span>`;
+                    cell.classList.add('clickable');
+                    cell.title = "休息日未簽到，點擊即可直接補簽！";
+                    cell.onclick = () => {
+                        addToList('user_checked_dates', dateStr);
+                        alert(`【${dateStr}】休息日已成功為您補簽！太棒了！🎉`);
+                        updateCalendarView();
+                        renderSystemPage();
+                    };
                 } else if (done && !checked) {
-                    // 🚨 訓練已做，只是忘記勾選簽到：點擊直接補簽，不用重做！
                     badgeHtml = `<span class="day-badge badge-needcheck">待補點 📝</span>`;
                     cell.classList.add('clickable');
                     cell.title = "您已完成該日訓練，點擊即可直接補點簽到！";
@@ -923,7 +1207,6 @@
                         renderSystemPage();
                     };
                 } else {
-                    // 未完成訓練（可能只有勾選或連勾都沒有）
                     badgeHtml = `<span class="day-badge badge-missed">未簽到 ⭕</span>`;
                     cell.classList.add('clickable');
                     cell.title = "點擊立刻進入這天的課表補訓！";
@@ -1212,10 +1495,9 @@
         function endWorkout() {
             clearInterval(countdownInterval); clearAllHighlights(); isRunning = false;
             
-            // 標記該日期訓練確實完成
             if (makeupTargetDateStr) {
                 addToList('workout_done_dates', makeupTargetDateStr);
-                addToList('user_checked_dates', makeupTargetDateStr); // 補訓完成時同時完成勾選簽到
+                addToList('user_checked_dates', makeupTargetDateStr); 
                 
                 const doneDate = makeupTargetDateStr;
                 makeupTargetDateStr = null; 
