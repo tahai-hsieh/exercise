@@ -80,7 +80,7 @@
             margin-top: 15px;
             margin-bottom: 5px;
             font-size: 1.6rem;
-            padding-right: 70px; /* 避開右上角按鈕 */
+            padding-right: 70px;
             padding-left: 10px;
         }
         .daily-quote {
@@ -156,6 +156,7 @@
         .current-task { font-size: 1.5rem; color: #2c3e50; font-weight: bold; margin: 8px 0; padding: 0 5px; }
         .timer-countdown { font-size: 3.5rem; font-weight: bold; color: var(--accent-color); margin: 5px 0; transition: color 0.2s ease; word-break: break-all; }
 
+        /* 課表清單樣式 */
         .workout-section-title { font-size: 1.2rem; font-weight: bold; color: #2c3e50; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; width: 100%; }
         .workout-list { list-style: none; padding: 0; margin: 0; opacity: 0.8; width: 100%; }
         .workout-item { background: var(--card-bg); border-left: 5px solid #bdc3c7; margin-bottom: 12px; padding: 15px; border-radius: 0 8px 8px 0; box-shadow: 0 2px 5px rgba(0,0,0,0.04); text-align: left; }
@@ -425,7 +426,7 @@
             2: "“ 卓越的判決來自於無數次的肌肉記憶，今天的汗水是明天的精準判斷。 ⚡ ”",
             3: "“ 體能是裁判的第二生命，把核心練得跟鋼板一樣硬，場上誰都無法動搖你！ 🔥 ”",
             4: "“ 紀律不是明天的口號，而是今天的每一組分腿蹲與波比跳。 🏋️‍♂️ ”",
-            5: "“ 保留最完美的體能，為了週末球場上的全速爆發做準備。 💤 ”",
+            5: "“ 鍛鍊核心的穩定度，讓你在哨聲響起時擁有無比的底氣與專注！ 🔥 ”",
             6: "“ 20公尺折返跑是速度與意志的對決，跟著節奏，實地轟炸它！ 🏃‍♂️ ”",
             0: "“ 懂得修復與徹底拉伸的裁判，才能在職涯的路上走得比誰都遠。 🛁 ”"
         };
@@ -595,12 +596,13 @@
             { id: 4, name: "5. 組間大休息", type: "timer", duration: 180, isFinalRest: true, restAfter: true, isRestStep: true } 
         ];
 
+        // 依據指定更新的每週課表：一三五肌力、二四休息、六體能、日放鬆
         const originalSchedule = {
             1: { type: "strength", name: "核心肌力日 🔥", desc: "🎯 課表：練核心、雕刻腹肌、練單腳力量。", hasTimer: true, maxRounds: 3, activeConfig: strengthConfig, title: "⏱ 核心下肢循環訓練控制台" },
             2: { type: "rest", name: "完全休息日 💤", desc: "🛌 課表：完全休息。修復是為了走更長遠的路！", hasTimer: false },
             3: { type: "strength", name: "核心肌力日 🔥", desc: "🎯 課表：強化核心剛性，讓肚子跟鋼板一樣硬。", hasTimer: true, maxRounds: 3, activeConfig: strengthConfig, title: "⏱ 核心下肢循環訓練控制台" },
             4: { type: "rest", name: "完全休息日 💤", desc: "🛌 課表：完全休息（保留體能給週末）。", hasTimer: false },
-            5: { type: "rest", name: "完全休息日 💤", desc: "🛌 課表：完全休息（保留體能給週末）。", hasTimer: false },
+            5: { type: "strength", name: "核心肌力日 🔥", desc: "🎯 課表：練核心、雕刻腹肌、練單腳力量。", hasTimer: true, maxRounds: 3, activeConfig: strengthConfig, title: "⏱ 核心下肢循環訓練控制台" },
             6: { type: "cardio", name: "體能爆汗日 ⚡", desc: "跑場、操場或開音檔，實地轟炸 20 公尺裁判折返跑（Beep Test）與動態腹肌。", hasTimer: true, maxRounds: 4, activeConfig: cardioConfig, title: "⏱ 體能爆汗折返跑訓練控制台" },
             0: { type: "rest", name: "修復放鬆日 🛁", desc: "🧘 課表：徹底拉伸、泡熱水澡恢復。", hasTimer: false }
         };
@@ -608,7 +610,7 @@
         const weekNames = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
         let todayDay = new Date().getDay(); 
         let activeWorkout = null; 
-        let makeupTargetDateStr = null; // 紀錄當前補簽對應的日期 (YYYY-MM-DD)
+        let makeupTargetDateStr = null; 
         
         let currentRound = 1;
         let currentStepIndex = 0;
@@ -640,7 +642,6 @@
             return `${year}-${month}-${day}`;
         }
 
-        // 簽到陣列管理
         function getCheckinRecords() {
             try {
                 return JSON.parse(localStorage.getItem('checkin_records') || '[]');
@@ -658,7 +659,6 @@
         }
 
         window.onload = function() {
-            // 相容性：若舊版只有 checkedInDate，同步進新版 records
             const oldDate = localStorage.getItem('checkedInDate');
             if (oldDate) {
                 const todayFormatted = getFormattedDate(new Date());
@@ -697,7 +697,6 @@
             activeWorkout = { ...originalSchedule[todayDay] };
 
             if (makeupTargetDateStr) {
-                // 如果是透過月曆指定補簽某天
                 const parts = makeupTargetDateStr.split('-');
                 const d = new Date(parts[0], parts[1] - 1, parts[2]);
                 const dayOfWeek = d.getDay();
@@ -847,7 +846,6 @@
             const records = getCheckinRecords();
             const todayFormatted = getFormattedDate(new Date());
 
-            // 補齊前置空白
             for (let i = 0; i < firstDayIndex; i++) {
                 const blank = document.createElement('div');
                 blank.className = "day-cell empty";
@@ -866,7 +864,7 @@
                 cell.className = "day-cell";
 
                 let badgeHtml = "";
-                let shortWorkout = schedule.name.split(' ')[0]; // 擷取主要名稱
+                let shortWorkout = schedule.name.split(' ')[0];
 
                 if (isChecked) {
                     badgeHtml = `<span class="day-badge badge-checked">已簽到 ✅</span>`;
@@ -892,7 +890,6 @@
             }
         }
 
-        // 點選未簽到日期跳轉進入該課表
         function selectDayForMakeup(dateStr, schedule) {
             toggleCalendarModal(false);
             if (isRunning) resetWorkout();
@@ -1177,7 +1174,6 @@
             countdownText.style.opacity = "1";
             stopMusicPlaylist(); 
             
-            // 🚨 若為補簽或當日訓練，完成後自動標記簽到成功
             if (makeupTargetDateStr) {
                 saveCheckinDate(makeupTargetDateStr);
                 alert(`太棒了！已確實完成訓練，【${makeupTargetDateStr}】已成功轉為「已簽到」狀態！💪`);
