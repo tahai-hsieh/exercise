@@ -215,6 +215,7 @@
         }
         .badge-checked { background: #d4edda; color: #155724; }
         .badge-missed { background: #f8d7da; color: #721c24; cursor: pointer; text-decoration: underline; }
+        .badge-needcheck { background: #fff3cd; color: #856404; cursor: pointer; font-weight: 900; }
         .badge-rest { background: #e2e3e5; color: #383d41; }
         .day-cell.clickable { cursor: pointer; transition: transform 0.1s; }
         .day-cell.clickable:active { transform: scale(0.95); background-color: #fff9e6; }
@@ -596,7 +597,7 @@
             { id: 4, name: "5. 組間大休息", type: "timer", duration: 180, isFinalRest: true, restAfter: true, isRestStep: true } 
         ];
 
-        // 依據指定更新的每週課表：一三五肌力、二四休息、六體能、日放鬆
+        // 原始排定的每週課表：一三五肌力、二四休息、六體能、日放鬆
         const originalSchedule = {
             1: { type: "strength", name: "核心肌力日 🔥", desc: "🎯 課表：練核心、雕刻腹肌、練單腳力量。", hasTimer: true, maxRounds: 3, activeConfig: strengthConfig, title: "⏱ 核心下肢循環訓練控制台" },
             2: { type: "rest", name: "完全休息日 💤", desc: "🛌 課表：完全休息。修復是為了走更長遠的路！", hasTimer: false },
@@ -642,28 +643,37 @@
             return `${year}-${month}-${day}`;
         }
 
-        function getCheckinRecords() {
-            try {
-                return JSON.parse(localStorage.getItem('checkin_records') || '[]');
-            } catch (e) {
-                return [];
+        /* ==================== 簽到與訓練雙狀態管理機制 ==================== */
+        function getStoredList(key) {
+            try { return JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) { return []; }
+        }
+        function addToList(key, item) {
+            const list = getStoredList(key);
+            if (!list.includes(item)) {
+                list.push(item);
+                localStorage.setItem(key, JSON.stringify(list));
             }
         }
 
-        function saveCheckinDate(dateStr) {
-            const records = getCheckinRecords();
-            if (!records.includes(dateStr)) {
-                records.push(dateStr);
-                localStorage.setItem('checkin_records', JSON.stringify(records));
+        function isUserCheckedIn(dateStr) {
+            return getStoredList('user_checked_dates').includes(dateStr);
+        }
+        function isWorkoutDone(dateStr) {
+            return getStoredList('workout_done_dates').includes(dateStr);
+        }
+
+        // 判定當天是否算「簽到成功」：
+        // 休息日只需勾選；訓練日必須同時具備「按簽到」且「完成訓練」
+        function isDayOfficiallyCompleted(dateStr, schedule) {
+            const checked = isUserCheckedIn(dateStr);
+            const done = isWorkoutDone(dateStr);
+            if (!schedule.hasTimer) {
+                return checked; // 休息日只要點過簽到就算成功
             }
+            return checked && done;
         }
 
         window.onload = function() {
-            const oldDate = localStorage.getItem('checkedInDate');
-            if (oldDate) {
-                const todayFormatted = getFormattedDate(new Date());
-                saveCheckinDate(todayFormatted);
-            }
             initCalendarSelectors();
             renderSystemPage();
         };
@@ -690,8 +700,6 @@
             document.getElementById('welcome-date').textContent = `今天是 ${weekNames[todayDay]}`;
             
             const todayFormatted = getFormattedDate(new Date());
-            const records = getCheckinRecords();
-            const isCheckedInToday = records.includes(todayFormatted);
             const mockMode = localStorage.getItem('mockMode');
 
             activeWorkout = { ...originalSchedule[todayDay] };
@@ -730,12 +738,31 @@
 
             const checkinBtn = document.getElementById('checkin-btn');
             const checkinText = document.getElementById('checkin-status-text');
-            if (isCheckedInToday) {
-                checkinBtn.disabled = true; checkinBtn.textContent = "已簽到";
-                checkinText.innerHTML = "🎉 今日已完成簽到！太棒了！"; checkinText.style.color = "#27ae60";
+            
+            const todayChecked = isUserCheckedIn(todayFormatted);
+            const todayDone = isWorkoutDone(todayFormatted);
+            const todayOfficiallyDone = isDayOfficiallyCompleted(todayFormatted, originalSchedule[todayDay]);
+
+            if (todayOfficiallyDone) {
+                checkinBtn.disabled = true; 
+                checkinBtn.textContent = "已簽到";
+                checkinText.innerHTML = "🎉 今日已完成簽到與訓練！太棒了！"; 
+                checkinText.style.color = "#27ae60";
+            } else if (todayChecked && !todayDone && activeWorkout.hasTimer) {
+                checkinBtn.disabled = true;
+                checkinBtn.textContent = "已勾選";
+                checkinText.innerHTML = "📝 已勾選簽到（需完成訓練才算成功）⏳";
+                checkinText.style.color = "var(--accent-color)";
+            } else if (!todayChecked && todayDone && activeWorkout.hasTimer) {
+                checkinBtn.disabled = false;
+                checkinBtn.textContent = "補點簽到";
+                checkinText.innerHTML = "🏃 訓練已完成！請按右側按鈕完成簽到 👈";
+                checkinText.style.color = "var(--secondary-color)";
             } else {
-                checkinBtn.disabled = false; checkinBtn.textContent = "每日簽到";
-                checkinText.innerHTML = "今日尚未簽到 📝"; checkinText.style.color = "var(--danger-color)";
+                checkinBtn.disabled = false; 
+                checkinBtn.textContent = "每日簽到";
+                checkinText.innerHTML = "今日尚未簽到 📝"; 
+                checkinText.style.color = "var(--danger-color)";
             }
 
             if (activeWorkout.hasTimer) {
@@ -790,9 +817,18 @@
         
         function clickCheckIn() { 
             const todayStr = getFormattedDate(new Date());
-            saveCheckinDate(todayStr);
-            localStorage.setItem('checkedInDate', new Date().toDateString()); 
-            alert("簽到成功！今天也要保持紀律，繼續加油！🔥"); 
+            addToList('user_checked_dates', todayStr);
+            const todayWorkout = originalSchedule[todayDay];
+            
+            if (todayWorkout.hasTimer) {
+                if (isWorkoutDone(todayStr)) {
+                    alert("簽到與訓練皆已完成！今天太有紀律了！🔥");
+                } else {
+                    alert("已勾選簽到！別忘了完成下方訓練課表才算正式簽到成功喔！💪");
+                }
+            } else {
+                alert("簽到成功！今天好好休息放鬆！🛁");
+            }
             renderSystemPage(); 
         }
 
@@ -843,7 +879,6 @@
 
             const firstDayIndex = new Date(year, month, 1).getDay();
             const totalDays = new Date(year, month + 1, 0).getDate();
-            const records = getCheckinRecords();
             const todayFormatted = getFormattedDate(new Date());
 
             for (let i = 0; i < firstDayIndex; i++) {
@@ -857,7 +892,10 @@
                 const dateStr = getFormattedDate(dateObj);
                 const dayOfWeek = dateObj.getDay();
                 const schedule = originalSchedule[dayOfWeek];
-                const isChecked = records.includes(dateStr);
+                
+                const checked = isUserCheckedIn(dateStr);
+                const done = isWorkoutDone(dateStr);
+                const isFullyCompleted = isDayOfficiallyCompleted(dateStr, schedule);
                 const isPastOrToday = (dateStr <= todayFormatted);
 
                 const cell = document.createElement('div');
@@ -866,13 +904,26 @@
                 let badgeHtml = "";
                 let shortWorkout = schedule.name.split(' ')[0];
 
-                if (isChecked) {
+                if (isFullyCompleted) {
                     badgeHtml = `<span class="day-badge badge-checked">已簽到 ✅</span>`;
                 } else if (!isPastOrToday) {
                     badgeHtml = `<span class="day-badge badge-rest">未到期</span>`;
-                } else if (schedule.type === "rest") {
+                } else if (!schedule.hasTimer) {
+                    // 休息日未簽到
                     badgeHtml = `<span class="day-badge badge-rest">休息日 💤</span>`;
+                } else if (done && !checked) {
+                    // 🚨 訓練已做，只是忘記勾選簽到：點擊直接補簽，不用重做！
+                    badgeHtml = `<span class="day-badge badge-needcheck">待補點 📝</span>`;
+                    cell.classList.add('clickable');
+                    cell.title = "您已完成該日訓練，點擊即可直接補點簽到！";
+                    cell.onclick = () => {
+                        addToList('user_checked_dates', dateStr);
+                        alert(`【${dateStr}】已為您自動補上簽到！太棒了！🎉`);
+                        updateCalendarView();
+                        renderSystemPage();
+                    };
                 } else {
+                    // 未完成訓練（可能只有勾選或連勾都沒有）
                     badgeHtml = `<span class="day-badge badge-missed">未簽到 ⭕</span>`;
                     cell.classList.add('clickable');
                     cell.title = "點擊立刻進入這天的課表補訓！";
@@ -1160,28 +1211,40 @@
 
         function endWorkout() {
             clearInterval(countdownInterval); clearAllHighlights(); isRunning = false;
-            startBtn.textContent = "再練一次 💪"; startBtn.classList.remove('stop-mode');
             
-            pauseBtn.style.display = 'none';
-            stepAdjustBox.style.display = 'none';
-            skipBtn.style.display = 'none'; 
-            counterBtn.style.display = 'none'; 
-            musicCtrlBox.style.display = 'none';
-            
-            roundText.textContent = `第 ${activeWorkout.maxRounds} / ${activeWorkout.maxRounds} 組`;
-            taskText.textContent = "🎉 恭喜完成今日完整訓練！卓越紀律！";
-            countdownText.style.color = "var(--primary-color)"; countdownText.textContent = "🏆";
-            countdownText.style.opacity = "1";
-            stopMusicPlaylist(); 
-            
+            // 標記該日期訓練確實完成
             if (makeupTargetDateStr) {
-                saveCheckinDate(makeupTargetDateStr);
-                alert(`太棒了！已確實完成訓練，【${makeupTargetDateStr}】已成功轉為「已簽到」狀態！💪`);
-                makeupTargetDateStr = null;
-                renderSystemPage();
+                addToList('workout_done_dates', makeupTargetDateStr);
+                addToList('user_checked_dates', makeupTargetDateStr); // 補訓完成時同時完成勾選簽到
+                
+                const doneDate = makeupTargetDateStr;
+                makeupTargetDateStr = null; 
+                resetWorkout();             
+                renderSystemPage();         
+                
+                alert(`太棒了！已確實完成補訓，【${doneDate}】已正式簽到成功！💪\n已為您切換回今天的課表！`);
             } else {
                 const todayFormatted = getFormattedDate(new Date());
-                saveCheckinDate(todayFormatted);
+                addToList('workout_done_dates', todayFormatted);
+                
+                startBtn.textContent = "再練一次 💪"; startBtn.classList.remove('stop-mode');
+                pauseBtn.style.display = 'none';
+                stepAdjustBox.style.display = 'none';
+                skipBtn.style.display = 'none'; 
+                counterBtn.style.display = 'none'; 
+                musicCtrlBox.style.display = 'none';
+                
+                roundText.textContent = `第 ${activeWorkout.maxRounds} / ${activeWorkout.maxRounds} 組`;
+                taskText.textContent = "🎉 恭喜完成今日完整訓練！卓越紀律！";
+                countdownText.style.color = "var(--primary-color)"; countdownText.textContent = "🏆";
+                countdownText.style.opacity = "1";
+                stopMusicPlaylist(); 
+
+                if (isUserCheckedIn(todayFormatted)) {
+                    alert("今日簽到與訓練皆已完成！太棒了！🏆");
+                } else {
+                    alert("今日訓練已完成！記得點擊上方「補點簽到」完成簽到紀錄喔！📝");
+                }
                 renderSystemPage();
             }
 
